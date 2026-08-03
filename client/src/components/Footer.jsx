@@ -159,7 +159,7 @@ export default function Footer() {
                     &copy; 2026 CaptionFlow. All rights reserved.
                 </p>
                 <p className="text-gray-400 text-sm">
-                    Made with ❤️ by the CaptionFlow team
+                    Made with ❤️ by marvelade
                 </p>
             </div>
         </footer>
