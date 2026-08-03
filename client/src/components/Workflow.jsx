@@ -41,6 +41,9 @@ export default function Workflow() {
                             <div
                                 key={step.number}
                                 className="relative flex flex-col items-center px-2"
+                                data-aos="fade-up"
+                                data-aos-delay={step.number * 120}
+                                data-aos-duration="700"
                             >
                                 <div className="relative z-10 w-12 h-12 bg-[#7C3AED] text-white rounded-full flex items-center justify-center text-lg font-bold mb-4">
                                     {step.number}

@@ -1,7 +1,11 @@
 export default function UploadBox() {
     return (
         <div className="flex justify-center p-5 md:py-12">
-            <div className="border-2 border-[#7c3aed4a] border-dashed rounded-xl p-5 md:p-12 text-center max-w-2xl w-full hover:border-[#7C3AED] transition-all bg-purple-50 cursor-pointer">
+            <div
+                className="border-2 border-[#7c3aed4a] border-dashed rounded-xl p-5 md:p-12 text-center max-w-2xl w-full hover:border-[#7C3AED] transition-all bg-purple-50 cursor-pointer"
+                data-aos="zoom-in"
+                data-aos-duration="800"
+            >
                 <div className="upload-icon flex justify-center items-center mb-4">
                     <i className="bi bi-folder text-5xl md:text-6xl"></i>
                 </div>

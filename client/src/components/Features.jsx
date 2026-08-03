@@ -57,6 +57,9 @@ export default function Features() {
                         <div
                             key={index}
                             className="bg-white border border-purple-200 p-8 rounded-xl text-center transition-all hover:shadow-md hover:-translate-y-2 duration-300"
+                            data-aos="fade-up"
+                            data-aos-delay={index * 80}
+                            data-aos-duration="700"
                         >
                             <div className="flex justify-center items-center mb-4">
                                 <i className={feature.icon} style={icon}></i>

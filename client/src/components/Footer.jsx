@@ -1,7 +1,15 @@
 export default function Footer() {
     return (
-        <footer className="bg-gray-900 text-white pt-20 pb-8 md:px-30 px-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-12 mb-12">
+        <footer
+            className="bg-gray-900 text-white pt-20 pb-8 md:px-30 px-10"
+            data-aos="fade-up"
+            data-aos-duration="900"
+        >
+            <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 md:gap-12 mb-12"
+                data-aos="fade-up"
+                data-aos-duration="900"
+            >
                 <div>
                     <h4 className="text-lg font-bold mb-4">CaptionFlow</h4>
                     <p className="text-gray-400 text-sm leading-relaxed">
