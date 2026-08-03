@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "autoprefixer": "^10.5.4",
     "bootstrap-icons": "^1.13.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
