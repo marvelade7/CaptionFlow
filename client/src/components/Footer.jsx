@@ -1,4 +1,5 @@
 export default function Footer() {
+    const currentYear = new Date().getFullYear();
     return (
         <footer
             className="bg-gray-900 text-white pt-20 pb-8 md:px-30 px-10"
@@ -156,7 +157,7 @@ export default function Footer() {
 
             <div className="border-t border-gray-700 pt-8 text-center">
                 <p className="text-gray-400 text-sm mb-2">
-                    &copy; 2026 CaptionFlow. All rights reserved.
+                    &copy; {currentYear} CaptionFlow. All rights reserved.
                 </p>
                 <p className="text-gray-400 text-sm">
                     Made with ❤️ by marvelade
