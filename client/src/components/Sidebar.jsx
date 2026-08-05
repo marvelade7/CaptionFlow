@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutGrid,
     UploadCloud,
@@ -10,6 +10,7 @@ import {
     LogOut,
     AudioLines,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutGrid, end: true },
@@ -43,6 +44,12 @@ function NavItem({ to, label, icon: Icon }) {
 }
 
 export default function Sidebar() {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+    const logoutHandler = () => {
+        logout();
+        navigate("/login");
+    };
     return (
         <aside className="flex h-full w-70 shrink-0 flex-col justify-between border-r border-[#ecebf3] bg-white px-4 py-6">
             <div>
@@ -75,6 +82,7 @@ export default function Sidebar() {
             {/* Logout */}
             <button
                 type="button"
+                onClick={logoutHandler}
                 className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
             >
                 <LogOut size={18} />

@@ -4,24 +4,22 @@ const jwt = require("jsonwebtoken");
 
 // Create a new user
 const createUser = (req, res) => {
-    const { firstName, lastName, username, email, password } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     // Validate required fields
-    if (!firstName || !lastName || !username || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
         return res.status(400).json({
             success: false,
             message: "All fields are required.",
         });
     }
 
-    User.findOne({
-        $or: [{ email }, { username }],
-    })
+    User.findOne({ email})
         .then((existingUser) => {
             if (existingUser) {
                 return res.status(409).json({
                     success: false,
-                    message: "Email or username already exists.",
+                    message: "User already exists.",
                 });
             }
 
@@ -30,7 +28,6 @@ const createUser = (req, res) => {
             const newUser = new User({
                 firstName,
                 lastName,
-                username,
                 email,
                 password: hashedPassword,
             });

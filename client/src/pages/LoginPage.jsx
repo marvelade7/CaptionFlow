@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { AudioLines, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import axios from "axios";
+import api from "../services/api.js";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function GoogleIcon() {
     return (
@@ -27,13 +32,38 @@ function GoogleIcon() {
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const loginHandler = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get("email");
+        const password = formData.get("password");
+
+        setSubmitting(true);
+        api.post("/auth/login", { email, password })
+            .then((res) => {
+                login(res.data.user, res.data.token);
+                toast.success("Login successful!");
+                navigate("/dashboard");
+            })
+            .catch((err) => {
+                setSubmitting(false);
+                toast.error(
+                    err.response?.data?.message ||
+                        "Login failed. Please try again.",
+                );
+            });
+    };
 
     return (
-        <div className="w-full  bg-white h-full overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        <div className="w-full  bg-[#FAF8FF] h-full overflow-hidden grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 border border-gray-200 rounded-xl flex flex-col justify-center md:mx-35 md:my-13">
+            <div className="p-5 sm:p-7 bg-white shadow-sm rounded-xl flex flex-col justify-center mx-auto md:w-120 w-[90%] my-10 lg:mx-35 lg:my-13">
                 <img
-                    src="./public/captionFlowLogo33.png"
+                    src="./captionFlowLogo33.png"
                     width="60"
                     className="mb-5"
                 />
@@ -45,15 +75,16 @@ export default function LoginPage() {
                     Kinetic clarity in every transcription.
                 </p>
 
-                <form className="space-y-5">
+                <form className="space-y-5" onSubmit={loginHandler}>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Email
                         </label>
                         <input
                             type="email"
+                            name="email"
                             placeholder="name@company.com"
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
                         />
                     </div>
 
@@ -64,8 +95,9 @@ export default function LoginPage() {
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
+                                name="password"
                                 placeholder="••••••••"
-                                className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                                className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
                             />
                             <button
                                 type="button"
@@ -104,9 +136,16 @@ export default function LoginPage() {
 
                     <button
                         type="submit"
-                        className="w-full bg-[#7C3AED] text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        disabled={submitting}
+                        className={`w-full bg-[#7C3AED] flex items-center cursor-pointer justify-center gap-3 text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity ${submitting ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        Login
+                        {submitting && (
+                            <AudioLines
+                                size={16}
+                                className="animate-spin text-white"
+                            />
+                        )}
+                        {submitting ? "Logging in..." : "Login"}
                     </button>
                 </form>
 
@@ -135,7 +174,7 @@ export default function LoginPage() {
             </div>
 
             {/* Right panel — promo */}
-            <div className="relative hidden md:flex flex-col justify-center p-10 sm:p-12 bg-[#7C3AED] overflow-hidden">
+            <div className="relative hidden lg:flex flex-col justify-center p-10 sm:p-12 bg-[#7C3AED] overflow-hidden">
                 <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
 
                 <span className="relative inline-flex w-fit items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-[11px] font-semibold mb-5">

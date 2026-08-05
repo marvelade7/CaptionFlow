@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { AudioLines, Eye, EyeOff, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import * as yup from "yup";
+import { Link, useNavigate } from "react-router-dom";
+import { useFormik } from "formik";
+import toast from "react-hot-toast";
+import api from "../services/api";
+import { signupSchema } from "../validations/authValidation";
 
 function GoogleIcon() {
     return (
@@ -25,51 +30,47 @@ function GoogleIcon() {
     );
 }
 
-// Simple password strength check based on length + variety of character classes
-function getPasswordStrength(password) {
-    if (!password) return 0;
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-    return score; // 0-4
-}
-
-const STRENGTH_LABELS = ["Too weak", "Weak", "Fair", "Good", "Strong"];
-const STRENGTH_COLORS = ["#E5E7EB", "#EF4444", "#F59E0B", "#6366F1", "#10B981"];
-
 export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        username: "",
-        email: "",
-        password: "",
+    const navigate = useNavigate();
+
+    const formik = useFormik({
+        initialValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+        },
+        validationSchema: signupSchema,
+        onSubmit: (values, { setSubmitting, resetForm }) => {
+            setSubmitting(true);
+            api.post("/auth/register", values)
+                .then((res) => {
+                    toast.success(
+                        res.data.message || "Account created successfully",
+                    );
+
+                    resetForm();
+
+                    // navigate("/login");
+                })
+                .catch((err) => {
+                    console.log(err.response);
+                    console.log(err.response?.data);
+                    toast.error(
+                        err.response?.data?.message || "Registration failed",
+                    );
+                })
+                .finally(() => {
+                    setSubmitting(false);
+                });
+        },
     });
-    const strength = getPasswordStrength(formData.password);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(formData);
-    };
 
     return (
-        <div className="w-full bg-white overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        <div className="w-full bg-white overflow-hidden grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center md:mx-35 md:my-10">
-                {/* <img
-                    src="./public/captionFlowLogo33.png"
-                    width="60"
-                    className="mb-5"
-                /> */}
-
+            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center mx-auto sm:w-120 w-[90%] my-10 lg:mx-35 lg:my-10">
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                     Create your account
                 </h1>
@@ -77,7 +78,7 @@ export default function SignupPage() {
                     Start transcribing with kinetic clarity today.
                 </p>
 
-                <form className="space-y-5" onSubmit={handleSubmit}>
+                <form className="space-y-5" onSubmit={formik.handleSubmit}>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -87,10 +88,17 @@ export default function SignupPage() {
                                 type="text"
                                 name="firstName"
                                 placeholder="Jane"
-                                value={formData.firstName}
-                                onChange={handleChange}
+                                value={formik.values.firstName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
                                 className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
+                            {formik.touched.firstName &&
+                                formik.errors.firstName && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {formik.errors.firstName}
+                                    </p>
+                                )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -100,26 +108,19 @@ export default function SignupPage() {
                                 type="text"
                                 name="lastName"
                                 placeholder="Cooper"
-                                value={formData.lastName}
-                                onChange={handleChange}
+                                value={formik.values.lastName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
                                 className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
+                            {formik.touched.lastName &&
+                                formik.errors.lastName && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {formik.errors.lastName}
+                                    </p>
+                                )}
                         </div>
                     </div>
-
-                    {/* <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Username
-                        </label>
-                        <input
-                            type="text"
-                            name="username"
-                            placeholder="janecooper"
-                            value={formData.username}
-                            onChange={handleChange}
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
-                        />
-                    </div> */}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -129,10 +130,16 @@ export default function SignupPage() {
                             type="email"
                             name="email"
                             placeholder="name@company.com"
-                            value={formData.email}
-                            onChange={handleChange}
+                            value={formik.values.email}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
                             className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                         />
+                        {formik.touched.email && formik.errors.email && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {formik.errors.email}
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -142,13 +149,17 @@ export default function SignupPage() {
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
-                                value={formData.password}
-                                onChange={handleChange}
+                                name="password"
+                                value={formik.values.password}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
                                 placeholder="Create a password"
                                 className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
+
                             <button
                                 type="button"
+                                disabled={!formik.values.password}
                                 onClick={() => setShowPassword((v) => !v)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 aria-label={
@@ -164,28 +175,11 @@ export default function SignupPage() {
                                 )}
                             </button>
                         </div>
-
-                        {/* Strength meter */}
-                        {/* <div className="flex items-center gap-1.5 mt-2">
-                                <div className="flex-1 flex gap-1">
-                                    {[0, 1, 2, 3].map((i) => (
-                                        <div
-                                            key={i}
-                                            className="h-1 flex-1 rounded-full transition-colors"
-                                            style={{
-                                                backgroundColor:
-                                                    i < strength ? STRENGTH_COLORS[strength] : "#E5E7EB",
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                                <span
-                                    className="text-[11px] font-medium w-14 text-right"
-                                    style={{ color: password ? STRENGTH_COLORS[strength] : "#9CA3AF" }}
-                                >
-                                    {password ? STRENGTH_LABELS[strength] : ""}
-                                </span>
-                            </div> */}
+                        {formik.touched.password && formik.errors.password && (
+                            <p className="text-xs text-red-500 mt-1">
+                                {formik.errors.password}
+                            </p>
+                        )}
                     </div>
 
                     <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer select-none">
@@ -213,9 +207,20 @@ export default function SignupPage() {
 
                     <button
                         type="submit"
-                        className="w-full bg-[#7C3AED] text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                        disabled={formik.isSubmitting}
+                        className={`w-full flex items-center cursor-pointer justify-center gap-2 bg-[#7C3AED] text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity ${
+                            formik.isSubmitting
+                                ? "opacity-70 cursor-not-allowed"
+                                : ""
+                        }`}
                     >
-                        Create account
+                        {formik.isSubmitting && (
+                            <AudioLines
+                                size={16}
+                                className="animate-spin text-white"
+                            />
+                        )}
+                        {formik.isSubmitting ? "Creating..." : "Create account"}
                     </button>
                 </form>
 
@@ -244,10 +249,10 @@ export default function SignupPage() {
             </div>
 
             {/* Right panel — promo */}
-            <div className="relative hidden md:flex flex-col justify-center px-10 overflow-hidden  bg-linear-to-r from-[#7c3aedcf] to-[#6D28D9]">
+            <div className="relative hidden lg:flex flex-col justify-center px-10 overflow-hidden  bg-linear-to-r from-[#7c3aedcf] to-[#6D28D9]">
                 {/* <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" /> */}
                 <img
-                    src="./public/captionFlowLogo33.png"
+                    src="./captionFlowLogo33.png"
                     width="90"
                     className="mb-5 filter brightness-0 invert"
                 />

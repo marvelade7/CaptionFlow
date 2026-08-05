@@ -1,40 +1,43 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
-
-const PAGE_META = {
-    "/dashboard": {
-        title: "Welcome back, Alex",
-        subtitle: "Your transcriptions are processing with 99% accuracy today.",
-    },
-    "/dashboard/upload": {
-        title: "Upload",
-        subtitle: "Add new audio or video files for transcription.",
-    },
-    "/dashboard/my-files": {
-        title: "My Files",
-        subtitle: "Everything you have uploaded, in one place.",
-    },
-    "/dashboard/transcripts": {
-        title: "Transcripts",
-        subtitle: "Browse and search your completed transcripts.",
-    },
-    "/dashboard/downloads": {
-        title: "Downloads",
-        subtitle: "Export-ready files, available anytime.",
-    },
-    "/dashboard/account": {
-        title: "Account",
-        subtitle: "Manage your profile and subscription.",
-    },
-    "/dashboard/settings": {
-        title: "Settings",
-        subtitle: "Configure CaptionFlow to fit your workflow.",
-    },
-};
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function DashboardLayout() {
     const { pathname } = useLocation();
+    const { user } = useAuth();
+    const PAGE_META = {
+        "/dashboard": {
+            title: `Welcome back, ${user?.firstName} ${user?.lastName}`,
+            subtitle:
+                "Your transcriptions are processing with 99% accuracy today.",
+        },
+        "/dashboard/upload": {
+            title: "Upload",
+            subtitle: "Add new audio or video files for transcription.",
+        },
+        "/dashboard/my-files": {
+            title: "My Files",
+            subtitle: "Everything you have uploaded, in one place.",
+        },
+        "/dashboard/transcripts": {
+            title: "Transcripts",
+            subtitle: "Browse and search your completed transcripts.",
+        },
+        "/dashboard/downloads": {
+            title: "Downloads",
+            subtitle: "Export-ready files, available anytime.",
+        },
+        "/dashboard/account": {
+            title: "Account",
+            subtitle: "Manage your profile and subscription.",
+        },
+        "/dashboard/settings": {
+            title: "Settings",
+            subtitle: "Configure CaptionFlow to fit your workflow.",
+        },
+    };
+
     const meta = PAGE_META[pathname] ?? { title: "CaptionFlow", subtitle: "" };
 
     return (
