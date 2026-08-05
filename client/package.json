@@ -13,12 +13,16 @@
     "@tailwindcss/vite": "^4.3.3",
     "aos": "^2.3.4",
     "autoprefixer": "^10.5.4",
+    "axios": "^1.19.0",
     "bootstrap-icons": "^1.13.1",
+    "formik": "^2.4.9",
     "lucide-react": "^1.28.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.18.2",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

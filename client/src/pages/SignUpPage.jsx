@@ -63,12 +63,12 @@ export default function SignupPage() {
     return (
         <div className="w-full bg-white overflow-hidden grid grid-cols-1 md:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 border border-gray-200 rounded-xl flex flex-col justify-center md:mx-35 md:my-10">
-                <img
+            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center md:mx-35 md:my-10">
+                {/* <img
                     src="./public/captionFlowLogo33.png"
                     width="60"
                     className="mb-5"
-                />
+                /> */}
 
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                     Create your account
@@ -89,7 +89,7 @@ export default function SignupPage() {
                                 placeholder="Jane"
                                 value={formData.firstName}
                                 onChange={handleChange}
-                                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
                         </div>
                         <div>
@@ -102,12 +102,12 @@ export default function SignupPage() {
                                 placeholder="Cooper"
                                 value={formData.lastName}
                                 onChange={handleChange}
-                                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
                         </div>
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Username
                         </label>
@@ -117,9 +117,9 @@ export default function SignupPage() {
                             placeholder="janecooper"
                             value={formData.username}
                             onChange={handleChange}
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                         />
-                    </div>
+                    </div> */}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -131,7 +131,7 @@ export default function SignupPage() {
                             placeholder="name@company.com"
                             value={formData.email}
                             onChange={handleChange}
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                         />
                     </div>
 
@@ -145,7 +145,7 @@ export default function SignupPage() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Create a password"
-                                className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 focus:border-[#7C3AED]"
+                                className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-0 focus:border-0 focus:ring-2 focus:ring-[#7C3AED]/60 focus:border-[#7C3AED]"
                             />
                             <button
                                 type="button"
@@ -191,7 +191,7 @@ export default function SignupPage() {
                     <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer select-none">
                         <input
                             type="checkbox"
-                            className="w-4 h-4 mt-0.5 rounded border-gray-300 text-[#7C3AED] focus:ring-[#7C3AED]/40"
+                            className="w-4 h-4 mt-0.5 rounded border-gray-300 text-[#7c3aed] focus:ring-[#7C3AED]/40"
                         />
                         <span>
                             I agree to the{" "}
@@ -244,8 +244,13 @@ export default function SignupPage() {
             </div>
 
             {/* Right panel — promo */}
-            <div className="relative hidden md:flex flex-col justify-center px-10 overflow-hidden  bg-[#7C3AED]">
+            <div className="relative hidden md:flex flex-col justify-center px-10 overflow-hidden  bg-linear-to-r from-[#7c3aedcf] to-[#6D28D9]">
                 {/* <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" /> */}
+                <img
+                    src="./public/captionFlowLogo33.png"
+                    width="90"
+                    className="mb-5 filter brightness-0 invert"
+                />
 
                 <span className="relative inline-flex w-fit items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-[11px] font-semibold mb-5">
                     Join 12,000+ teams
@@ -255,7 +260,7 @@ export default function SignupPage() {
                     Every word, captured with kinetic precision.
                 </h2>
 
-                <div className="relative bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-3 my-10">
+                <div className="relative bg-transparent  rounded-2xl border border-white p-6 flex flex-col gap-3 my-10">
                     {[
                         "Real-time transcription accuracy up to 99%",
                         "Support for 40+ languages",
@@ -265,11 +270,12 @@ export default function SignupPage() {
                             <span className="mt-0.5 shrink-0 w-4 h-4 rounded-full bg-[#7C3AED]/10 flex items-center justify-center">
                                 <Check
                                     size={11}
-                                    className="text-[#7C3AED]"
+                                    className="text-white"
+                                    // className="text-[#7C3AED]"
                                     strokeWidth={3}
                                 />
                             </span>
-                            <span className="text-xs text-gray-600 leading-snug text-left">
+                            <span className="text-sm text-white leading-snug text-left">
                                 {item}
                             </span>
                         </div>

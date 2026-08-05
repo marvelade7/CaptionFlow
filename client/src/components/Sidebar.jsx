@@ -44,7 +44,7 @@ function NavItem({ to, label, icon: Icon }) {
 
 export default function Sidebar() {
     return (
-        <aside className="flex h-full w-64 shrink-0 flex-col justify-between border-r border-[#ecebf3] bg-white px-4 py-6">
+        <aside className="flex h-full w-70 shrink-0 flex-col justify-between border-r border-[#ecebf3] bg-white px-4 py-6">
             <div>
                 {/* Brand */}
                 <div className="mb-10 flex items-center gap-2 px-2">
