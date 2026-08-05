@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Navbar() {
     return (
         <nav className="sticky top-0 z-100 lg:px-35 px-5  bg-[#FAF8FF] border-b border-gray-200 shadow-sm">
@@ -28,12 +30,16 @@ export default function Navbar() {
                     </a>
                 </div>
                 <div className="hidden md:flex items-center gap-5">
-                    <button className="border text-[#7C3AED] border-[#7C3AED] py-2 px-5 rounded-lg cursor-pointer font-medium hover:bg-gray-100 transition-colors">
-                        Login
-                    </button>
-                    <button className="border bg-[#7C3AED] py-2 px-5 rounded-lg text-white font-medium cursor-pointer">
-                        Get Started
-                    </button>
+                    <Link to="/login">
+                        <button className="border text-[#7C3AED] border-[#7C3AED] py-2 px-5 rounded-lg cursor-pointer font-medium hover:bg-gray-100 transition-colors">
+                            Login
+                        </button>
+                    </Link>
+                    <Link to="/signup">
+                        <button className="border bg-[#7C3AED] py-2 px-5 rounded-lg text-white font-medium cursor-pointer hover:bg-[#6d28d9] transition-colors">
+                            Get Started
+                        </button>
+                    </Link>
                 </div>
                 <i className="block bg-[#7c3aedd2] text-white rounded-sm py- px-2 md:hidden bi bi-list text-2xl"></i>
             </div>
