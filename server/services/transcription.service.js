@@ -30,11 +30,13 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
         });
 
         const processingTime = Math.round((Date.now() - startTime) / 1000);
+        const duration = transcription.duration || 0;
 
         // Update with success
         await Transcription.findByIdAndUpdate(transcriptionId, {
             transcript: transcription.text,
             segments: transcription.segments || [], // Save the segments
+            duration: duration,                     // Save the audio duration
             status: "completed",
             processingTime,
         });
