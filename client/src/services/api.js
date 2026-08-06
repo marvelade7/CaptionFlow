@@ -1,8 +1,9 @@
 import axios from "axios";
+const apiURL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
     // baseURL: "http://localhost:5050/api",
-    baseURL: "https://captionflow-xxls.onrender.com/api",
+    baseURL: apiURL,
     headers: {
         "Content-Type": "application/json",
     },
