@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import {
     UploadCloud, FileAudio, FileVideo, CheckCircle2,
     XCircle, Loader2, Copy, Check, AlertTriangle, X, Download
@@ -52,6 +53,7 @@ function StatusBadge({ status }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Upload() {
     const inputRef = useRef(null);
+    const location = useLocation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile]         = useState(null);   // selected File object
     const [error, setError]       = useState("");
@@ -73,6 +75,20 @@ export default function Upload() {
         if (f.size > MAX_BYTES) return `File is too large (max ${formatBytes(MAX_BYTES)}).`;
         return "";
     }, []);
+
+    // Handle preloaded file from landing page
+    useEffect(() => {
+        if (location.state?.pendingFile) {
+            const pending = location.state.pendingFile;
+            const err = validate(pending);
+            if (!err) {
+                setFile(pending);
+                toast.success(`Loaded "${pending.name}" ready for upload!`, { id: "preload-file" });
+            } else {
+                setError(err);
+            }
+        }
+    }, [location.state, validate]);
 
     const pick = (f) => {
         const msg = validate(f);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AudioLines, Eye, EyeOff, Check } from "lucide-react";
 import * as yup from "yup";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import toast from "react-hot-toast";
 import api from "../services/api";
@@ -33,6 +33,7 @@ function GoogleIcon() {
 export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const formik = useFormik({
         initialValues: {
@@ -47,12 +48,10 @@ export default function SignupPage() {
             api.post("/auth/register", values)
                 .then((res) => {
                     toast.success(
-                        res.data.message || "Account created successfully",
+                        res.data.message || "Account created! Please log in to continue.",
                     );
-
                     resetForm();
-
-                    // navigate("/login");
+                    navigate("/login", { state: location.state });
                 })
                 .catch((err) => {
                     console.log(err.response);
