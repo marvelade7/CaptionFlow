@@ -1,6 +1,11 @@
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import UploadBox from "./UploadBox";
 
 export default function Hero() {
+    const { user } = useAuth();
+    const ctaTarget = user ? "/dashboard/upload" : "/signup";
+
     return (
         <section className="bg-[#FAF8FF] py-16 md:py-20">
             <div className="flex flex-col gap-12">
@@ -34,12 +39,16 @@ export default function Hero() {
                         data-aos="fade-up"
                         data-aos-delay="300"
                     >
-                        <button className="bg-[#7C3AED] py-2 px-8 text-white font-medium rounded-4xl text-sm md:text-base cursor-pointer">
-                            Get Transcripts
-                        </button>
-                        <button className="bg-transparent border py-2 px-8 text-[#7C3AED] font-medium rounded-4xl text-sm md:text-base cursor-pointer">
-                            See Demo
-                        </button>
+                        <Link to={ctaTarget}>
+                            <button className="w-full sm:w-auto bg-[#7C3AED] py-3 px-8 text-white font-semibold rounded-full text-sm md:text-base cursor-pointer hover:bg-[#6d28d9] transition-all shadow-md hover:shadow-lg">
+                                Start Transcribing Free
+                            </button>
+                        </Link>
+                        <a href="#workflow">
+                            <button className="w-full sm:w-auto bg-white border border-[#7C3AED] py-3 px-8 text-[#7C3AED] font-semibold rounded-full text-sm md:text-base cursor-pointer hover:bg-[#f5f3ff] transition-all shadow-xs">
+                                How It Works
+                            </button>
+                        </a>
                     </div>
                 </div>
 

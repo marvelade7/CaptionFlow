@@ -47,7 +47,7 @@ function Avatar({ user, onUpload, uploading }) {
 
 function SectionCard({ title, description, children }) {
     return (
-        <div className="rounded-2xl border border-[#ecebf3] bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
+        <div className="rounded-2xl border border-[#ecebf3] bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]" data-aos="fade-up">
             <div className="border-b border-[#ecebf3] px-6 py-5">
                 <h2 className="text-base font-bold text-[#0f0b1f]">{title}</h2>
                 {description && (
@@ -335,7 +335,7 @@ export default function Account() {
             </SectionCard>
 
             {/* ── Danger Zone ──────────────────────────────────────────── */}
-            <div className="rounded-2xl border border-red-100 bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
+            <div className="rounded-2xl border border-red-100 bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]" data-aos="fade-up" data-aos-delay="100">
                 <div className="border-b border-red-100 px-6 py-5">
                     <h2 className="flex items-center gap-2 text-base font-bold text-red-500">
                         <AlertTriangle size={16} strokeWidth={2.5} />

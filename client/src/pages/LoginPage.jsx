@@ -67,7 +67,7 @@ export default function LoginPage() {
     return (
         <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto">
+            <div className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto" data-aos="fade-up">
                 <img
                     src="./captionFlowLogo33.png"
                     width="60"

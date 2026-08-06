@@ -50,7 +50,7 @@ export default function Downloads() {
   };
 
   return (
-    <div className="rounded-2xl border border-[#ecebf3] bg-white p-6 shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
+    <div className="rounded-2xl border border-[#ecebf3] bg-white p-6 shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]" data-aos="fade-up">
       <h2 className="text-lg font-bold text-[#0f0b1f]">Downloads</h2>
       <div className="mt-5 flex flex-col divide-y divide-[#ecebf3]">
         {loading ? (
@@ -58,8 +58,8 @@ export default function Downloads() {
         ) : transcriptions.length === 0 ? (
           <div className="py-8 text-center text-sm text-[#a8a3bd]">No completed transcriptions available to download yet.</div>
         ) : (
-          transcriptions.map((job) => (
-            <div key={job._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
+          transcriptions.map((job, idx) => (
+            <div key={job._id} data-aos="fade-up" data-aos-delay={idx * 60} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f5f3ff]">
                   <FileText size={16} className="text-[#7c3aed]" />

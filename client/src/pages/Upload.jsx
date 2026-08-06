@@ -182,7 +182,7 @@ export default function Upload() {
     const FileIcon = isAudio ? FileAudio : FileVideo;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6" data-aos="fade-up">
 
             {/* ── Drop zone ─────────────────────────────────────────────────── */}
             {!jobId && (

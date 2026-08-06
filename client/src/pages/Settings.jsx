@@ -6,7 +6,7 @@ const TOGGLES = [
 
 export default function Settings() {
   return (
-    <div className="rounded-2xl border border-[#ecebf3] bg-white p-6 shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
+    <div className="rounded-2xl border border-[#ecebf3] bg-white p-6 shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]" data-aos="fade-up">
       <h2 className="text-lg font-bold text-[#0f0b1f]">Settings</h2>
       <div className="mt-5 flex flex-col divide-y divide-[#ecebf3]">
         {TOGGLES.map((toggle) => (

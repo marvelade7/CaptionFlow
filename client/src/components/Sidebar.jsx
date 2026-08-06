@@ -114,20 +114,28 @@ export default function Sidebar({ isOpen, onClose }) {
             </aside>
 
             {/* Mobile Drawer Overlay */}
-            {isOpen && (
-                <div className="fixed inset-0 z-50 flex lg:hidden">
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-                        onClick={onClose}
-                    />
+            <div
+                className={`fixed inset-0 z-50 flex lg:hidden transition-all duration-300 ${
+                    isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                }`}
+            >
+                {/* Backdrop */}
+                <div
+                    className={`fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 ${
+                        isOpen ? "opacity-100" : "opacity-0"
+                    }`}
+                    onClick={onClose}
+                />
 
-                    {/* Drawer Content */}
-                    <aside className="relative z-10 w-72 h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
-                        {sidebarContent}
-                    </aside>
-                </div>
-            )}
+                {/* Drawer Content */}
+                <aside
+                    className={`relative z-10 w-72 h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+                        isOpen ? "translate-x-0" : "-translate-x-full"
+                    }`}
+                >
+                    {sidebarContent}
+                </aside>
+            </div>
         </>
     );
 }

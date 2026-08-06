@@ -65,43 +65,47 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Dropdown Menu */}
-            {isMenuOpen && (
-                <div className="md:hidden py-4 border-t border-gray-200 flex flex-col gap-4 bg-[#FAF8FF] animate-in fade-in slide-in-from-top duration-200">
-                    <a
-                        href="#features"
-                        onClick={closeMenu}
-                        className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
-                    >
-                        Features
-                    </a>
-                    <a
-                        href="#workflow"
-                        onClick={closeMenu}
-                        className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
-                    >
-                        How It Works
-                    </a>
-                    <a
-                        href="#pricing"
-                        onClick={closeMenu}
-                        className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
-                    >
-                        Pricing
-                    </a>
-                    <div className="flex flex-col gap-3 pt-2 border-t border-gray-200">
-                        <Link to="/login" onClick={closeMenu}>
-                            <button className="w-full border text-[#7C3AED] border-[#7C3AED] py-2 px-5 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-                                Login
-                            </button>
-                        </Link>
-                        <Link to="/signup" onClick={closeMenu}>
-                            <button className="w-full bg-[#7C3AED] py-2 px-5 rounded-lg text-white font-medium hover:bg-[#6d28d9] transition-colors">
-                                Get Started
-                            </button>
-                        </Link>
-                    </div>
+            <div
+                className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                    isMenuOpen
+                        ? "max-h-96 opacity-100 py-4 border-t border-gray-200"
+                        : "max-h-0 opacity-0 py-0 border-t-0"
+                } flex flex-col gap-4 bg-[#FAF8FF]`}
+            >
+                <a
+                    href="#features"
+                    onClick={closeMenu}
+                    className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
+                >
+                    Features
+                </a>
+                <a
+                    href="#workflow"
+                    onClick={closeMenu}
+                    className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
+                >
+                    How It Works
+                </a>
+                <a
+                    href="#pricing"
+                    onClick={closeMenu}
+                    className="text-gray-900 font-bold text-base px-2 hover:text-[#7C3AED] transition-colors"
+                >
+                    Pricing
+                </a>
+                <div className="flex flex-col gap-3 pt-2 border-t border-gray-200">
+                    <Link to="/login" onClick={closeMenu}>
+                        <button className="w-full border text-[#7C3AED] border-[#7C3AED] py-2 px-5 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                            Login
+                        </button>
+                    </Link>
+                    <Link to="/signup" onClick={closeMenu}>
+                        <button className="w-full bg-[#7C3AED] py-2 px-5 rounded-lg text-white font-medium hover:bg-[#6d28d9] transition-colors">
+                            Get Started
+                        </button>
+                    </Link>
                 </div>
-            )}
+            </div>
         </nav>
     );
 }

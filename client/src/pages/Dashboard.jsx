@@ -50,34 +50,44 @@ export default function Dashboard() {
         <div className="flex flex-col gap-6">
             {/* Stat row */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                    icon={UploadCloud}
-                    label="Total Uploads"
-                    value={loading ? "—" : totalUploads.toLocaleString()}
-                    iconBg="#EDE9FE"
-                    iconColor="#7c3aed"
-                />
-                <StatCard
-                    icon={CheckCircle2}
-                    label="Completed Jobs"
-                    value={loading ? "—" : completedJobs.toLocaleString()}
-                    iconBg="#F1F0F5"
-                    iconColor="#3f3a52"
-                />
-                <StatCard
-                    icon={Timer}
-                    label="Minutes Processed"
-                    value={loading ? "—" : formatMinutes(totalSeconds)}
-                    iconBg="#EDE9FE"
-                    iconColor="#7c3aed"
-                />
-                <StorageCard usedGb={usedGb} totalGb={STORAGE_LIMIT_GB} />
+                <div data-aos="fade-up" data-aos-delay="50">
+                    <StatCard
+                        icon={UploadCloud}
+                        label="Total Uploads"
+                        value={loading ? "—" : totalUploads.toLocaleString()}
+                        iconBg="#EDE9FE"
+                        iconColor="#7c3aed"
+                    />
+                </div>
+                <div data-aos="fade-up" data-aos-delay="100">
+                    <StatCard
+                        icon={CheckCircle2}
+                        label="Completed Jobs"
+                        value={loading ? "—" : completedJobs.toLocaleString()}
+                        iconBg="#F1F0F5"
+                        iconColor="#3f3a52"
+                    />
+                </div>
+                <div data-aos="fade-up" data-aos-delay="150">
+                    <StatCard
+                        icon={Timer}
+                        label="Minutes Processed"
+                        value={loading ? "—" : formatMinutes(totalSeconds)}
+                        iconBg="#EDE9FE"
+                        iconColor="#7c3aed"
+                    />
+                </div>
+                <div data-aos="fade-up" data-aos-delay="200">
+                    <StorageCard usedGb={usedGb} totalGb={STORAGE_LIMIT_GB} />
+                </div>
             </div>
 
             {/* Main content row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-                <RecentJobsTable jobs={recentJobs} loading={loading} />
-                <div className="flex flex-col gap-5">
+                <div data-aos="fade-up" data-aos-delay="250">
+                    <RecentJobsTable jobs={recentJobs} loading={loading} />
+                </div>
+                <div className="flex flex-col gap-5" data-aos="fade-up" data-aos-delay="300">
                     <AISummaryCard />
                     <VelocityChart />
                     <ProFeatureCard />
