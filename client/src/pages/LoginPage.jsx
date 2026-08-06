@@ -142,7 +142,7 @@ export default function LoginPage() {
                         {submitting && (
                             <AudioLines
                                 size={16}
-                                className="animate-spin text-white"
+                                className="animate-spin text-white cursor-not-allowed"
                             />
                         )}
                         {submitting ? "Logging in..." : "Login"}

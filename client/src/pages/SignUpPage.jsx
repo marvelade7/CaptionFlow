@@ -70,7 +70,13 @@ export default function SignupPage() {
     return (
         <div className="w-full bg-white overflow-hidden grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center mx-auto sm:w-120 w-[90%] my-10 lg:mx-35 lg:my-10">
+            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center mx-auto sm:w-120 w-[90%] my-10 lg:mx-35 lg:my-7">
+                <img
+                    src="./captionFlowLogo33.png"
+                    width="50"
+                    className="mb-1"
+                />
+
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                     Create your account
                 </h1>
@@ -78,7 +84,7 @@ export default function SignupPage() {
                     Start transcribing with kinetic clarity today.
                 </p>
 
-                <form className="space-y-5" onSubmit={formik.handleSubmit}>
+                <form className="space-y-4" onSubmit={formik.handleSubmit}>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -217,7 +223,7 @@ export default function SignupPage() {
                         {formik.isSubmitting && (
                             <AudioLines
                                 size={16}
-                                className="animate-spin text-white"
+                                className="animate-spin text-white cursor-not-allowed"
                             />
                         )}
                         {formik.isSubmitting ? "Creating..." : "Create account"}

@@ -44,7 +44,7 @@ export default function DashboardLayout() {
         <div className="flex h-screen w-full overflow-hidden bg-[#f4f3f8]">
             <Sidebar />
             <div className="flex h-full flex-1 flex-col overflow-y-auto">
-                <Topbar title={meta.title} subtitle={meta.subtitle} />
+                <Topbar title={meta.title} subtitle={meta.subtitle} showDate={pathname === "/dashboard"} />
                 <main className="flex-1 px-8 pb-8">
                     <Outlet />
                 </main>
