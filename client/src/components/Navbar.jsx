@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import logo from "../assets/captionFlowLogo22.png";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,9 +12,13 @@ export default function Navbar() {
         <nav className="sticky top-0 z-50 lg:px-35 px-5 bg-[#FAF8FF] border-b border-gray-200 shadow-sm">
             <div className="flex justify-between items-center py-4">
                 <div>
-                    <Link to="/" onClick={closeMenu}>
-                        <h2 className="text-[#7C3AED] font-semibold md:text-2xl text-xl cursor-pointer">
-                            CaptionFlow
+                    <Link to="/" onClick={closeMenu} className="flex items-center gap-1">
+                        <img
+                            src={logo}
+                            className="mb-1 md:w-[70px] w-[50px]"
+                        />
+                        <h2 className="font-semibold md:text-2xl text-lg cursor-pointer">
+                            Caption<span className="text-[#7C3AED]">Flow</span>
                         </h2>
                     </Link>
                 </div>
@@ -60,7 +65,7 @@ export default function Navbar() {
                     className="md:hidden p-2 rounded-lg bg-[#7C3AED] text-white focus:outline-none"
                     aria-label="Toggle menu"
                 >
-                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
             </div>
 
