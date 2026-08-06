@@ -5,7 +5,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const [captionFlowUser, setUser] = useState(null);
     const [captionFlowToken, setToken] = useState(
-        localStorage.getItem("captionFlowToken") || null
+        localStorage.getItem("captionFlowToken") || null,
     );
 
     useEffect(() => {
@@ -31,6 +31,15 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("captionFlowUser");
         localStorage.removeItem("captionFlowToken");
     };
+
+    useEffect(() => {
+        const handleExpired = () => {
+            logout();
+            window.location.href = "/login";
+        };
+        window.addEventListener("auth:expired", handleExpired);
+        return () => window.removeEventListener("auth:expired", handleExpired);
+    }, []);
 
     return (
         <AuthContext.Provider
