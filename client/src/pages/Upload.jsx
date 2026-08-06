@@ -9,7 +9,7 @@ import { generateSrt, generateAss } from "../utils/subtitleHelpers";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ACCEPTED = ["mp3", "wav", "m4a", "flac", "mp4", "mov", "mkv", "webm"];
-const MAX_BYTES = 200 * 1024 * 1024; // 200 MB
+const MAX_BYTES = 300 * 1024 * 1024; // 300 MB
 const AUDIO_EXTS = ["mp3", "wav", "m4a", "flac"];
 const POLL_INTERVAL = 3000; // ms
 
@@ -214,7 +214,7 @@ export default function Upload() {
                                     Drag & drop your audio or video file here
                                 </p>
                                 <p className="mt-1 text-sm text-[#6b6680]">
-                                    or click to browse — up to 200 MB
+                                    or click to browse — up to 300 MB
                                 </p>
                             </div>
                             <div className="mt-1 flex flex-wrap justify-center gap-1.5">

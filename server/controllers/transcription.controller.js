@@ -11,11 +11,11 @@ const uploadFile = (req, res) => {
             .json({ success: false, message: "No file uploaded" });
     }
 
-    const MAX_SIZE = 200 * 1024 * 1024;
+    const MAX_SIZE = 300 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
         return res
             .status(400)
-            .json({ success: false, message: "File size exceeds 200MB limit" });
+            .json({ success: false, message: "File size exceeds 300MB limit" });
     }
 
     const validExtensions = [

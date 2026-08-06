@@ -55,7 +55,7 @@ export default function Sidebar() {
             <div>
                 {/* Brand */}
                 <div className="mb-10 flex items-center gap-2 px-2">
-                    <img src="./captionFlowLogo22.png" width="50" />
+                    <img src="./captionFlowLogo22.png" width="50" alt="Logo" />
                     <h3 className="text-lg font-semibold text-[#7c3aed]">
                         CaptionFlow
                     </h3>
