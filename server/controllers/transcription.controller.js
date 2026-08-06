@@ -1,6 +1,7 @@
 const fs = require("fs");
 const Transcription = require("../models/transcription.model");
 const cloudinary = require("../config/cloudinary.config");
+const { transcribeAudioJob } = require("../services/transcription.service");
 
 const uploadFile = (req, res) => {
     const file = req.file;
@@ -67,9 +68,8 @@ const uploadFile = (req, res) => {
             });
 
             return transcription.save().then((saved) => {
-                if (fs.existsSync(file.path)) {
-                    fs.unlinkSync(file.path);
-                }
+                // Trigger the background transcription job. We don't await this so we can return early to the user.
+                transcribeAudioJob(file.path, saved._id);
                 return saved;
             });
         })
