@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import GuestRoute from "./components/GuestRoute.jsx";
+import PWAToast from "./components/PWAToast";
 
 function App() {
     return (
@@ -31,6 +32,7 @@ function App() {
                         duration: 3000,
                     }}
                 />
+                <PWAToast />
                 <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route
