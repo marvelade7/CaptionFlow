@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://captionflow-xxls.onrender.com/api",
+    baseURL: "http://localhost:5050/api",
+    // baseURL: "https://captionflow-xxls.onrender.com/api",
     headers: {
         "Content-Type": "application/json",
     },

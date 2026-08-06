@@ -173,7 +173,7 @@ const updateUser = (req, res) => {
     User.findByIdAndUpdate(
         id,
         { firstName, lastName, email, username },
-        { new: true }   // return the updated document, not the old one
+        { returnDocument: 'after' }
     )
         .select("-password")
         .then((user) => {
@@ -190,6 +190,21 @@ const updateUser = (req, res) => {
             });
         })
         .catch((err) => {
+            // MongoDB duplicate key error
+            if (err.code === 11000) {
+                const field = Object.keys(err.keyPattern || {})[0];
+                const message =
+                    field === "username"
+                        ? "That username is already taken."
+                        : field === "email"
+                        ? "An account with that email already exists."
+                        : "Duplicate value error.";
+                return res.status(409).json({
+                    success: false,
+                    field,
+                    message,
+                });
+            }
             res.status(500).json({
                 success: false,
                 message: err.message,
@@ -250,7 +265,7 @@ const updateProfilePicture = (req, res) => {
             return User.findByIdAndUpdate(
                 id,
                 { profilePicture: result.secure_url },
-                { new: true }
+                { returnDocument: 'after' }
             ).select("-password");
         })
         .then((user) => {

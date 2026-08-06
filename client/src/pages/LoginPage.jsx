@@ -33,6 +33,7 @@ function GoogleIcon() {
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [errMessage, setErrMessage] = useState("");
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -43,6 +44,7 @@ export default function LoginPage() {
         const password = formData.get("password");
 
         setSubmitting(true);
+        setErrMessage("");
         api.post("/auth/login", { email, password })
             .then((res) => {
                 login(res.data.user, res.data.token);
@@ -52,6 +54,10 @@ export default function LoginPage() {
             .catch((err) => {
                 setSubmitting(false);
                 toast.error(
+                    err.response?.data?.message ||
+                        "Login failed. Please try again.",
+                );
+                setErrMessage(
                     err.response?.data?.message ||
                         "Login failed. Please try again.",
                 );
@@ -76,6 +82,15 @@ export default function LoginPage() {
                 </p>
 
                 <form className="space-y-5" onSubmit={loginHandler}>
+                    {/* Error message */}
+                    {errMessage &&
+                        setTimeout(() => {
+                            setErrMessage("");
+                        }, 3000) && (
+                            <p className="text-red-500 text-sm mb-5 bg-red-50 p-2 rounded-lg text-center border border-red-200 font-medium">
+                                {errMessage}
+                            </p>
+                        )}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Email
