@@ -19,6 +19,7 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     const allowedExtensions = [
+        // audio / video
         "mp3",
         "wav",
         "m4a",
@@ -27,6 +28,11 @@ const fileFilter = (req, file, cb) => {
         "mov",
         "mkv",
         "webm",
+        // images (for profile pictures)
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
     ];
     const extension = path.extname(file.originalname).toLowerCase().slice(1);
 

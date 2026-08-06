@@ -32,10 +32,6 @@ const userSchema = new mongoose.Schema(
             enum: ["user", "admin"],
             default: "user",
         },
-        uploadCount: {
-            type: Number,
-            default: 0,
-        },
         isVerified: {
             type: Boolean,
             default: false,
