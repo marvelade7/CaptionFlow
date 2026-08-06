@@ -24,7 +24,7 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
         const transcription = await groq.audio.transcriptions.create({
             file: fs.createReadStream(filePath),
             model: "whisper-large-v3",
-            response_format: "json",
+            response_format: "verbose_json", // Request detailed timestamps
             language: "en", // Defaulting to english for now
             temperature: 0.0,
         });
@@ -34,6 +34,7 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
         // Update with success
         await Transcription.findByIdAndUpdate(transcriptionId, {
             transcript: transcription.text,
+            segments: transcription.segments || [], // Save the segments
             status: "completed",
             processingTime,
         });

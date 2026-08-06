@@ -1,6 +1,5 @@
 const fs = require("fs");
 const Transcription = require("../models/transcription.model");
-const cloudinary = require("../config/cloudinary.config");
 const { transcribeAudioJob } = require("../services/transcription.service");
 
 const uploadFile = (req, res) => {
@@ -39,63 +38,38 @@ const uploadFile = (req, res) => {
         });
     }
 
-    cloudinary.uploader
-        .upload(file.path, {
-            folder: "transcriptions",
-            resource_type: "auto",
-        })
-        .then((result) => {
-            if (result.duration && result.duration > 600) {
-                return cloudinary.uploader
-                    .destroy(result.public_id)
-                    .then(() => {
-                        throw new Error("Duration exceeds 10 minutes limit");
-                    });
-            }
+    // Save the record immediately — no Cloudinary upload needed.
+    // Groq reads directly from the temp file on disk.
+    const transcription = new Transcription({
+        userId: req.user.id,
+        originalFileName: file.originalname,
+        fileSize: file.size,
+        language: req.body.language || "en",
+        status: "uploaded",
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
 
-            const transcription = new Transcription({
-                userId: req.user.id,
-                originalFileName: file.originalname,
-                cloudinaryUrl: result.secure_url,
-                duration: result.duration || 0,
-                fileSize: result.bytes || file.size,
-                language: req.body.language || "en",
-                transcript: "",
-                status: "uploaded",
-                processingTime: 0,
-                errorMessage: "",
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            });
+    transcription
+        .save()
+        .then((saved) => {
+            // Fire-and-forget: Groq transcribes in the background,
+            // updates the DB, then deletes the temp file.
+            transcribeAudioJob(file.path, saved._id);
 
-            return transcription.save().then((saved) => {
-                // Trigger the background transcription job. We don't await this so we can return early to the user.
-                transcribeAudioJob(file.path, saved._id);
-                return saved;
-            });
-        })
-        .then((transcription) => {
             res.status(200).json({
                 success: true,
-                message: "File uploaded successfully",
-                data: transcription,
+                message: "File uploaded successfully. Transcription started.",
+                data: saved,
             });
         })
         .catch((error) => {
-            console.error("Error uploading file:", error);
-            if (fs.existsSync(file.path)) {
-                fs.unlinkSync(file.path);
-            }
-
-            const message =
-                error.message === "Duration exceeds 10 minutes limit"
-                    ? error.message
-                    : "Failed to upload file";
-            const statusCode =
-                error.message === "Duration exceeds 10 minutes limit"
-                    ? 400
-                    : 500;
-
-            res.status(statusCode).json({ success: false, message });
+            console.error("=== DB Save Error ===", error.message);
+            // Clean up temp file if DB save fails
+            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+            res.status(500).json({
+                success: false,
+                message: `Failed to save transcription record: ${error.message}`,
+            });
         });
 };
 

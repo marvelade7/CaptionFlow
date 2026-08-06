@@ -13,11 +13,11 @@ const transcriptionSchema = new Schema({
     },
     cloudinaryUrl: {
         type: String,
-        required: true,
+        default: "", // No longer storing audio on Cloudinary
     },
     duration: {
         type: Number,
-        required: true,
+        default: 0,  // Updated after transcription completes
     },
     fileSize: {
         type: Number,
@@ -29,7 +29,15 @@ const transcriptionSchema = new Schema({
     },
     transcript: {
         type: String,
-        required: true,
+        default: "",  // Populated by Groq after transcription
+    },
+    segments: {
+        type: [{
+            start: Number,
+            end: Number,
+            text: String,
+        }],
+        default: [],  // Per-sentence timestamps from Groq verbose_json
     },
     status: {
         type: String,
@@ -39,7 +47,7 @@ const transcriptionSchema = new Schema({
     },
     processingTime: {
         type: Number,
-        required: true,
+        default: 0,
     },
     errorMessage: {
         type: String,
