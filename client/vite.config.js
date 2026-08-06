@@ -10,6 +10,9 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
             registerType: 'autoUpdate', // auto-updates SW in the background
+            devOptions: {
+                enabled: false,  
+            },
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
             manifest: {
                 name: 'CaptionFlow',
@@ -37,9 +40,6 @@ export default defineConfig({
                         purpose: 'maskable'
                     }
                 ]
-            },
-            devOptions: {
-                enabled: false,
             },
             workbox: {
                 // controls what gets precached for offline use
