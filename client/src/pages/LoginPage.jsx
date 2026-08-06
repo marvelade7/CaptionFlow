@@ -65,9 +65,9 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="w-full  bg-[#FAF8FF] h-full overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+        <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 bg-white shadow-sm rounded-xl flex flex-col justify-center mx-auto md:w-120 w-[90%] my-10 lg:mx-35 lg:my-13">
+            <div className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto">
                 <img
                     src="./captionFlowLogo33.png"
                     width="60"

@@ -29,13 +29,13 @@ export default function MyFiles() {
         <h2 className="text-lg font-bold text-[#0f0b1f]">My Files</h2>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <div className="col-span-2 text-center text-sm text-[#a8a3bd] py-6">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center text-sm text-[#a8a3bd] py-6">
             Loading your files...
           </div>
         ) : files.length === 0 ? (
-          <div className="col-span-2 text-center text-sm text-[#a8a3bd] py-6">
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center text-sm text-[#a8a3bd] py-6">
             No files uploaded yet.
           </div>
         ) : (

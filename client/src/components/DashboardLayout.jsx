@@ -1,14 +1,16 @@
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function DashboardLayout() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const { pathname } = useLocation();
     const { user } = useAuth();
     const PAGE_META = {
         "/dashboard": {
-            title: `Welcome back, ${user?.firstName} ${user?.lastName}`,
+            title: `Welcome back, ${user?.firstName || "User"}`,
             subtitle:
                 "Your transcriptions are processing with 99% accuracy today.",
         },
@@ -42,10 +44,15 @@ export default function DashboardLayout() {
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[#f4f3f8]">
-            <Sidebar />
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="flex h-full flex-1 flex-col overflow-y-auto">
-                <Topbar title={meta.title} subtitle={meta.subtitle} showDate={pathname === "/dashboard"} />
-                <main className="flex-1 px-8 pb-8">
+                <Topbar
+                    title={meta.title}
+                    subtitle={meta.subtitle}
+                    showDate={pathname === "/dashboard"}
+                    onMenuClick={() => setSidebarOpen(true)}
+                />
+                <main className="flex-1 px-4 sm:px-8 p-8 pt-4">
                     <Outlet />
                 </main>
             </div>

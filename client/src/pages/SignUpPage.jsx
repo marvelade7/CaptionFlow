@@ -68,9 +68,9 @@ export default function SignupPage() {
     });
 
     return (
-        <div className="w-full bg-white overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+        <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
-            <div className="p-5 sm:p-7 border border-purple-500 rounded-xl flex flex-col justify-center mx-auto sm:w-120 w-[90%] my-10 lg:mx-35 lg:my-7">
+            <div className="p-6 sm:p-8 bg-white shadow-sm border border-purple-200 rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto">
                 <img
                     src="./captionFlowLogo33.png"
                     width="50"
@@ -85,7 +85,7 @@ export default function SignupPage() {
                 </p>
 
                 <form className="space-y-4" onSubmit={formik.handleSubmit}>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                 First name

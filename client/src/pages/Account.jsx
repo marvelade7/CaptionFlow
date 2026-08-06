@@ -345,7 +345,7 @@ export default function Account() {
                         These actions are permanent and cannot be undone.
                     </p>
                 </div>
-                <div className="flex items-center justify-between px-6 py-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 sm:px-6 py-5">
                     <div>
                         <p className="text-sm font-semibold text-[#0f0b1f]">
                             Delete Account
@@ -357,7 +357,7 @@ export default function Account() {
                     <button
                         type="button"
                         onClick={() => toast.error("Coming soon.")}
-                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-100"
+                        className="self-start sm:self-auto rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-100"
                     >
                         Delete Account
                     </button>

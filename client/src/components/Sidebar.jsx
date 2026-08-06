@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import logo from "../assets/captionFlowLogo22.png";
 import {
     LayoutGrid,
     UploadCloud,
@@ -8,7 +9,7 @@ import {
     User,
     Settings as SettingsIcon,
     LogOut,
-    AudioLines,
+    X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -24,11 +25,12 @@ const PREFERENCE_ITEMS = [
     { to: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-function NavItem({ to, label, icon: Icon }) {
+function NavItem({ to, label, icon: Icon, onClick }) {
     return (
         <NavLink
             to={to}
             end={true}
+            onClick={onClick}
             className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
                     isActive
@@ -43,38 +45,51 @@ function NavItem({ to, label, icon: Icon }) {
     );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const logoutHandler = () => {
+        if (onClose) onClose();
         logout();
         navigate("/login");
     };
-    return (
-        <aside className="flex h-full w-70 shrink-0 flex-col justify-between border-r border-[#ecebf3] bg-white px-4 py-6">
+
+    const sidebarContent = (
+        <div className="flex h-full flex-col justify-between px-4 py-6">
             <div>
-                {/* Brand */}
-                <div className="mb-10 flex items-center gap-2 px-2">
-                    <img src="./captionFlowLogo22.png" width="50" alt="Logo" />
-                    <h3 className="text-lg font-semibold text-[#7c3aed]">
-                        CaptionFlow
-                    </h3>
+                {/* Brand & Mobile Close Button */}
+                <div className="mb-8 flex items-center justify-between px-2">
+                    <div className="flex items-center sm:gap-2 gap-1">
+                        <img src={logo} alt="logo" className="sm:w-[50px] w-[50px]" />
+                        <h3 className="text-lg font-semibold text-[#7c3aed]">
+                            CaptionFlow
+                        </h3>
+                    </div>
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-sm text-purple-500 hover:bg-gray-100 lg:hidden"
+                            aria-label="Close sidebar"
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Primary nav */}
-                <nav className="flex flex-col gap-2">
+                <nav className="flex flex-col gap-1.5">
                     {NAV_ITEMS.map((item) => (
-                        <NavItem key={item.to} {...item} />
+                        <NavItem key={item.to} {...item} onClick={onClose} />
                     ))}
                 </nav>
 
                 {/* Preferences */}
-                <p className="mb-1 mt-7 px-3 text-[11px] font-semibold uppercase tracking-wider text-[#a8a3bd]">
+                <p className="mb-1 mt-6 px-3 text-[11px] font-semibold uppercase tracking-wider text-[#a8a3bd]">
                     Preferences
                 </p>
                 <nav className="flex flex-col gap-1">
                     {PREFERENCE_ITEMS.map((item) => (
-                        <NavItem key={item.to} {...item} />
+                        <NavItem key={item.to} {...item} onClick={onClose} />
                     ))}
                 </nav>
             </div>
@@ -88,6 +103,31 @@ export default function Sidebar() {
                 <LogOut size={18} />
                 Logout
             </button>
-        </aside>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop static sidebar */}
+            <aside className="hidden lg:flex h-full w-64 shrink-0 flex-col border-r border-[#ecebf3] bg-white">
+                {sidebarContent}
+            </aside>
+
+            {/* Mobile Drawer Overlay */}
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex lg:hidden">
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+                        onClick={onClose}
+                    />
+
+                    {/* Drawer Content */}
+                    <aside className="relative z-10 w-72 h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
+                        {sidebarContent}
+                    </aside>
+                </div>
+            )}
+        </>
     );
 }

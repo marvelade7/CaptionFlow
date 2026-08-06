@@ -28,17 +28,18 @@ export default function RecentJobsTable({ jobs = [], loading = false }) {
     return (
         <div className="rounded-2xl border border-[#ecebf3] bg-white p-6 shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-[#0f0b1f]">Recent Transcription Jobs</h2>
+                <h2 className="sm:text-lg text-md font-bold text-[#0f0b1f]">Recent Transcription Jobs</h2>
                 <Link
                     to="/dashboard/my-files"
-                    className="text-sm font-semibold text-[#7c3aed] hover:text-[#6d28d9]"
+                    className="sm:text-sm text-xs font-semibold text-[#7c3aed] hover:text-[#6d28d9]"
                 >
                     View All
                 </Link>
             </div>
 
-            <table className="mt-5 w-full text-left text-sm">
-                <thead>
+            <div className="mt-5 w-full overflow-x-auto">
+                <table className="w-full min-w-[500px] text-left text-sm">
+                    <thead>
                     <tr className="text-xs uppercase tracking-wide text-[#a8a3bd]">
                         <th className="pb-3 font-semibold">File Name</th>
                         <th className="pb-3 font-semibold">Status</th>
@@ -100,6 +101,7 @@ export default function RecentJobsTable({ jobs = [], loading = false }) {
                     )}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 }

@@ -59,19 +59,19 @@ export default function Downloads() {
           <div className="py-8 text-center text-sm text-[#a8a3bd]">No completed transcriptions available to download yet.</div>
         ) : (
           transcriptions.map((job) => (
-            <div key={job._id} className="flex items-center justify-between py-4">
+            <div key={job._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f5f3ff]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f5f3ff]">
                   <FileText size={16} className="text-[#7c3aed]" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-[#0f0b1f] max-w-[200px] md:max-w-[400px] truncate" title={job.originalFileName}>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[#0f0b1f] max-w-[200px] sm:max-w-[300px] md:max-w-[400px] truncate" title={job.originalFileName}>
                     {job.originalFileName}
                   </p>
                   <p className="text-xs text-[#a8a3bd]">{formatDate(job.createdAt)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 self-end sm:self-auto">
                 <button
                   onClick={() => handleDownload(job, "srt")}
                   className="flex items-center gap-1.5 rounded-lg border border-[#ecebf3] px-3 py-1.5 text-xs font-semibold text-[#3f3a52] transition hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
