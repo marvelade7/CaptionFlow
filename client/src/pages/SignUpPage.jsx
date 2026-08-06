@@ -6,6 +6,7 @@ import { useFormik } from "formik";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { signupSchema } from "../validations/authValidation";
+import logo from "../assets/captionFlowLogo33.png";
 
 function GoogleIcon() {
     return (
@@ -71,7 +72,7 @@ export default function SignupPage() {
             {/* Left panel — form */}
             <div className="p-6 sm:p-8 bg-white shadow-sm border border-purple-200 rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto" data-aos="fade-up">
                 <img
-                    src="./captionFlowLogo33.png"
+                    src={logo}
                     width="50"
                     className="mb-1"
                 />
@@ -257,7 +258,7 @@ export default function SignupPage() {
             <div className="relative hidden lg:flex flex-col justify-center px-10 overflow-hidden  bg-linear-to-r from-[#7c3aedcf] to-[#6D28D9]">
                 {/* <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" /> */}
                 <img
-                    src="./captionFlowLogo33.png"
+                    src={logo}
                     width="90"
                     className="mb-5 filter brightness-0 invert"
                 />

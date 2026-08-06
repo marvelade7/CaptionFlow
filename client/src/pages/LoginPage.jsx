@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import logo from "../assets/captionFlowLogo33.png";
 
 function GoogleIcon() {
     return (
@@ -88,7 +89,7 @@ export default function LoginPage() {
                     data-aos="fade-up"
                 >
                     <img
-                        src="./captionFlowLogo33.png"
+                        src={logo}
                         width="60"
                         className="mb-5"
                     />
