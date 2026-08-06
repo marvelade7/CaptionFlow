@@ -14,7 +14,7 @@ export default function Topbar({ title, subtitle, showDate = false, onMenuClick 
     });
 
     return (
-        <header className="flex sticky top-0 z-10 flex-wrap items-center justify-between gap-4 px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 lg:border-none bg-white">
+        <header className="flex sticky top-0 z-10 flex-wrap items-center justify-between gap-4 px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 shadow-sm lg:border-none bg-white">
             <div className="flex items-center gap-5 pt-5">
                 {/* Mobile Menu Button */}
                 <button
