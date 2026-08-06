@@ -7,6 +7,7 @@ import AISummaryCard from "../components/AISummaryCard.jsx";
 import VelocityChart from "../components/VelocityChart.jsx";
 import ProFeatureCard from "../components/ProFeatureCard.jsx";
 import api from "../services/api.js";
+import AOS from "aos";
 
 const STORAGE_LIMIT_GB = 20;
 
@@ -33,7 +34,10 @@ export default function Dashboard() {
             .catch((err) => {
                 console.error("Failed to load transcriptions:", err);
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                setLoading(false)
+                setTimeout(() => AOS.refresh(), 0);
+            });
     }, []);
 
     // Derive stats from real data
@@ -77,17 +81,17 @@ export default function Dashboard() {
                         iconColor="#7c3aed"
                     />
                 </div>
-                <div data-aos="fade-up" data-aos-delay="200">
+                <div >
                     <StorageCard usedGb={usedGb} totalGb={STORAGE_LIMIT_GB} />
                 </div>
             </div>
 
             {/* Main content row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-                <div data-aos="fade-up" data-aos-delay="250">
+                <div>
                     <RecentJobsTable jobs={recentJobs} loading={loading} />
                 </div>
-                <div className="flex flex-col gap-5" data-aos="fade-up" data-aos-delay="300">
+                <div className="flex flex-col gap-5" >
                     <AISummaryCard />
                     <VelocityChart />
                     <ProFeatureCard />

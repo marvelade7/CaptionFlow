@@ -5,6 +5,8 @@ import Topbar from "../components/Topbar.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import AOS from "aos";
 
+
+
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { pathname } = useLocation();
@@ -61,7 +63,7 @@ export default function DashboardLayout() {
                 <main className="flex-1 px-4 sm:px-8 p-8 pt-4">
                     <div
                         key={pathname}
-                        className="animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
+                        className=""
                     >
                         <Outlet />
                     </div>
