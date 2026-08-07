@@ -88,11 +88,13 @@ export default function LoginPage() {
                     className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto"
                     data-aos="fade-up"
                 >
-                    <img
-                        src={logo}
-                        width="60"
-                        className="mb-5"
-                    />
+                    <Link to="/">
+                        <img
+                            src={logo}
+                            width="60"
+                            className="mb-5"
+                        />
+                    </Link>
 
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">
                         Welcome back

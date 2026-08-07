@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AudioLines, Eye, EyeOff, Check } from "lucide-react";
-import * as yup from "yup";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import toast from "react-hot-toast";
@@ -71,11 +70,13 @@ export default function SignupPage() {
         <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
             <div className="p-6 sm:p-8 bg-white shadow-sm border border-purple-200 rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto" data-aos="fade-up">
+                <Link to="/">
                 <img
                     src={logo}
                     width="50"
                     className="mb-1"
                 />
+                </Link>
 
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                     Create your account

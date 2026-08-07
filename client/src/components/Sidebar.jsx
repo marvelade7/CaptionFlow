@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/captionFlowLogo22.png";
 import {
     LayoutGrid,
@@ -59,12 +59,12 @@ export default function Sidebar({ isOpen, onClose }) {
             <div>
                 {/* Brand & Mobile Close Button */}
                 <div className="mb-8 flex items-center justify-between px-2">
-                    <div className="flex items-center sm:gap-2 gap-1">
+                    <Link to="/" className="flex items-center sm:gap-2 gap-1">
                         <img src={logo} alt="logo" className="sm:w-[50px] w-[50px]" />
                         <h3 className="text-lg font-semibold">
                             Caption<span className="font-bold text-[#7c3aed]">Flow</span>
                         </h3>
-                    </div>
+                    </Link>
                     {onClose && (
                         <button
                             onClick={onClose}
