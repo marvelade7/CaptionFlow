@@ -3,6 +3,7 @@ const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary.config");
+const auth = require("../config/firebaseAdmin");
 
 // Create a new user
 const createUser = (req, res) => {
@@ -114,6 +115,67 @@ const signInUser = (req, res) => {
         });
 };
 
+// Sign in / register via Google
+const signInWithGoogle = (req, res) => {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+        return res.status(400).json({
+            success: false,
+            message: "ID token is required.",
+        });
+    }
+
+    auth
+        .verifyIdToken(idToken)
+        .then((decoded) => {
+            const { email, name, picture, uid } = decoded;
+            return User.findOne({ email }).then((user) => {
+                if (user) {
+                    if (!user.isVerified) {
+                        user.isVerified = true;
+                        return user.save();
+                    }
+                    return user;
+                }
+                const [firstName, ...rest] = (name || "").split(" ");
+                const lastName = rest.join(" ") || "";
+                const newUser = new User({
+                    firstName: firstName || "Google",
+                    lastName: lastName || "User",
+                    email,
+                    profilePicture: picture,
+                    googleId: uid,
+                    isVerified: true,
+                });
+                return newUser.save();
+            });
+        })
+        .then((user) => {
+            const token = jwt.sign(
+                { id: user._id },
+                process.env.JWT_SECRET,
+                { expiresIn: "3h" }
+            );
+
+            const userData = user.toObject();
+            delete userData.password;
+
+            res.status(200).json({
+                success: true,
+                message: "Google sign in successful.",
+                token,
+                user: userData,
+            });
+        })
+        .catch((err) => {
+            res.status(401).json({
+                success: false,
+                message: "Invalid Google token.",
+            });
+        });
+};
+
 // Get all users
 const getAllUsers = (req, res) => {
     User.find().select("-password")
@@ -197,8 +259,8 @@ const updateUser = (req, res) => {
                     field === "username"
                         ? "That username is already taken."
                         : field === "email"
-                        ? "An account with that email already exists."
-                        : "Duplicate value error.";
+                            ? "An account with that email already exists."
+                            : "Duplicate value error.";
                 return res.status(409).json({
                     success: false,
                     field,
@@ -240,12 +302,12 @@ const updateProfilePicture = (req, res) => {
             // Delete old profile picture from Cloudinary if it exists
             const deleteOld = user.profilePicture
                 ? cloudinary.uploader.destroy(
-                      user.profilePicture
-                          .split("/")
-                          .slice(-2)
-                          .join("/")
-                          .replace(/\.[^/.]+$/, "") // strip file extension to get public_id
-                  )
+                    user.profilePicture
+                        .split("/")
+                        .slice(-2)
+                        .join("/")
+                        .replace(/\.[^/.]+$/, "") // strip file extension to get public_id
+                )
                 : Promise.resolve();
 
             return deleteOld.then(() =>
@@ -291,4 +353,5 @@ module.exports = {
     getUserById,
     updateUser,
     updateProfilePicture,
+    signInWithGoogle,
 };

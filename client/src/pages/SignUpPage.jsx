@@ -6,6 +6,9 @@ import toast from "react-hot-toast";
 import api from "../services/api";
 import { signupSchema } from "../validations/authValidation";
 import logo from "../assets/captionFlowLogo33.png";
+import { useAuth } from "../context/AuthContext.jsx";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../services/firebase.js";
 
 function GoogleIcon() {
     return (
@@ -32,8 +35,10 @@ function GoogleIcon() {
 
 export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const [googleSubmitting, setGoogleSubmitting] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { login } = useAuth();
 
     const formik = useFormik({
         initialValues: {
@@ -65,6 +70,29 @@ export default function SignupPage() {
                 });
         },
     });
+
+    const handleGoogleLogin = () => {
+        setGoogleSubmitting(true);
+        signInWithPopup(auth, googleProvider)
+            .then((result) => {
+                return result.user.getIdToken();
+            })
+            .then((idToken) => {
+                return api.post("/auth/google", { idToken });
+            })
+            .then((res) => {
+                login(res.data.user, res.data.token);
+                toast.success("Account created and logged in!");
+                navigate(location.state?.pendingFile ? "/dashboard/upload" : "/dashboard", {
+                    state: location.state?.pendingFile ? { pendingFile: location.state.pendingFile } : undefined,
+                });
+            })
+            .catch((err) => {
+                console.error("Google authentication error:", err);
+                toast.error(err.response?.data?.message || "Google sign-in failed. Please try again.");
+                setGoogleSubmitting(false);
+            });
+    };
 
     return (
         <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
@@ -239,9 +267,17 @@ export default function SignupPage() {
                     <div className="h-px flex-1 bg-gray-200" />
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                    <GoogleIcon />
-                    Google
+                <button
+                    onClick={handleGoogleLogin}
+                    disabled={googleSubmitting}
+                    className={`w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${googleSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                    {googleSubmitting ? (
+                        <AudioLines size={16} className="animate-spin text-[#7C3AED]" />
+                    ) : (
+                        <GoogleIcon />
+                    )}
+                    {googleSubmitting ? "Signing up..." : "Sign Up With Google"}
                 </button>
 
                 <p className="text-center text-sm text-gray-500 mt-6">

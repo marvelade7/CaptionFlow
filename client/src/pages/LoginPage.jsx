@@ -5,6 +5,8 @@ import { toast } from "react-hot-toast";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo from "../assets/captionFlowLogo33.png";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../services/firebase.js";
 
 function GoogleIcon() {
     return (
@@ -30,238 +32,265 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-        const [showPassword, setShowPassword] = useState(false);
-        const [submitting, setSubmitting] = useState(false);
-        const [errMessage, setErrMessage] = useState("");
-        const navigate = useNavigate();
-        const location = useLocation();
-        const { login } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [googleSubmitting, setGoogleSubmitting] = useState(false);
+    const [errMessage, setErrMessage] = useState("");
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
 
-        const pendingFile = location.state?.pendingFile;
+    const pendingFile = location.state?.pendingFile;
 
-        useEffect(() => {
-            if (location.state?.message) {
-                toast(location.state.message, {
-                    icon: "ℹ️",
-                    id: "login-pending-msg",
+    useEffect(() => {
+        if (location.state?.message) {
+            toast(location.state.message, {
+                icon: "ℹ️",
+                id: "login-pending-msg",
+            });
+        }
+    }, [location.state]);
+
+    const handleGoogleLogin = () => {
+        setGoogleSubmitting(true);
+        signInWithPopup(auth, googleProvider)
+            .then((result) => {
+                return result.user.getIdToken();
+            })
+            .then((idToken) => {
+                return api.post("/auth/google", { idToken });
+            })
+            .then((res) => {
+                login(res.data.user, res.data.token);
+                toast.success("Login successful!");
+                navigate(pendingFile ? "/dashboard/upload" : "/dashboard", {
+                    state: pendingFile ? { pendingFile } : undefined,
                 });
-            }
-        }, [location.state]);
+            })
+            .catch((err) => {
+                console.error("Google authentication error:", err);
+                toast.error(err.response?.data?.message || "Google sign-in failed. Please try again.");
+                setGoogleSubmitting(false);
+            });
+    };
 
-        const loginHandler = (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const email = formData.get("email");
-            const password = formData.get("password");
+    const loginHandler = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get("email");
+        const password = formData.get("password");
 
-            setSubmitting(true);
-            setErrMessage("");
-            api.post("/auth/login", { email, password })
-                .then((res) => {
-                    login(res.data.user, res.data.token);
-                    toast.success("Login successful!");
-                    if (pendingFile) {
-                        navigate("/dashboard/upload", {
-                            state: { pendingFile },
-                        });
-                    } else {
-                        navigate("/dashboard");
-                    }
-                })
-                .catch((err) => {
-                    setSubmitting(false);
-                    toast.error(
-                        err.response?.data?.message ||
-                            "Login failed. Please try again.",
-                    );
-                    setErrMessage(
-                        err.response?.data?.message ||
-                            "Login failed. Please try again.",
-                    );
-                });
-        };
+        setSubmitting(true);
+        setErrMessage("");
+        api.post("/auth/login", { email, password })
+            .then((res) => {
+                login(res.data.user, res.data.token);
+                toast.success("Login successful!");
+                if (pendingFile) {
+                    navigate("/dashboard/upload", {
+                        state: { pendingFile },
+                    });
+                } else {
+                    navigate("/dashboard");
+                }
+            })
+            .catch((err) => {
+                setSubmitting(false);
+                toast.error(
+                    err.response?.data?.message ||
+                        "Login failed. Please try again.",
+                );
+                setErrMessage(
+                    err.response?.data?.message ||
+                        "Login failed. Please try again.",
+                );
+            });
+    };
 
-        return (
-            <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
-                {/* Left panel — form */}
-                <div
-                    className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto"
-                    data-aos="fade-up"
-                >
-                    <Link to="/">
-                        <img
-                            src={logo}
-                            width="60"
-                            className="mb-5"
+    return (
+        <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
+            {/* Left panel — form */}
+            <div
+                className="p-6 sm:p-8 bg-white shadow-sm rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto"
+                data-aos="fade-up"
+            >
+                <Link to="/">
+                    <img src={logo} width="60" className="mb-5" />
+                </Link>
+
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                    Welcome back
+                </h1>
+                <p className="text-sm text-gray-500 mb-8">
+                    Kinetic clarity in every transcription.
+                </p>
+
+                <form className="space-y-5" onSubmit={loginHandler}>
+                    {/* Error message */}
+                    {errMessage &&
+                        setTimeout(() => {
+                            setErrMessage("");
+                        }, 3000) && (
+                            <p className="text-red-500 text-sm mb-5 bg-red-50 p-2 rounded-lg text-center border border-red-200 font-medium">
+                                {errMessage}
+                            </p>
+                        )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="name@company.com"
+                            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
                         />
-                    </Link>
-
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                        Welcome back
-                    </h1>
-                    <p className="text-sm text-gray-500 mb-8">
-                        Kinetic clarity in every transcription.
-                    </p>
-
-                    <form className="space-y-5" onSubmit={loginHandler}>
-                        {/* Error message */}
-                        {errMessage &&
-                            setTimeout(() => {
-                                setErrMessage("");
-                            }, 3000) && (
-                                <p className="text-red-500 text-sm mb-5 bg-red-50 p-2 rounded-lg text-center border border-red-200 font-medium">
-                                    {errMessage}
-                                </p>
-                            )}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="name@company.com"
-                                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    placeholder="••••••••"
-                                    className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword((v) => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    aria-label={
-                                        showPassword
-                                            ? "Hide password"
-                                            : "Show password"
-                                    }
-                                >
-                                    {showPassword ? (
-                                        <EyeOff size={16} />
-                                    ) : (
-                                        <Eye size={16} />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-gray-300 text-[#7C3AED] focus:ring-[#7C3AED]/40"
-                                />
-                                Remember me
-                            </label>
-                            <a
-                                href="#"
-                                className="text-[#7C3AED] font-medium hover:underline"
-                            >
-                                Forgot password?
-                            </a>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className={`w-full bg-[#7C3AED] flex items-center cursor-pointer justify-center gap-3 text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity ${submitting ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                            {submitting && (
-                                <AudioLines
-                                    size={16}
-                                    className="animate-spin text-white cursor-not-allowed"
-                                />
-                            )}
-                            {submitting ? "Logging in..." : "Login"}
-                        </button>
-                    </form>
-
-                    <div className="flex items-center gap-3 my-6">
-                        <div className="h-px flex-1 bg-gray-200" />
-                        <span className="text-[11px] tracking-wide text-gray-400 font-medium">
-                            OR CONTINUE WITH
-                        </span>
-                        <div className="h-px flex-1 bg-gray-200" />
                     </div>
 
-                    <button className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                        <GoogleIcon />
-                        Sign In With Google
-                    </button>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="••••••••"
+                                className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder-gray-400 focus:outline-none focus:border-none focus:ring-2 focus:ring-[#7C3AED]/70 focus:border-[#7C3AED]"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                aria-label={
+                                    showPassword
+                                        ? "Hide password"
+                                        : "Show password"
+                                }
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={16} />
+                                ) : (
+                                    <Eye size={16} />
+                                )}
+                            </button>
+                        </div>
+                    </div>
 
-                    <p className="text-center text-sm text-gray-500 mt-6">
-                        Don&apos;t have an account?{" "}
-                        <Link
-                            to="/signup"
+                    <div className="flex items-center justify-between text-sm">
+                        <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 rounded border-gray-300 text-[#7C3AED] focus:ring-[#7C3AED]/40"
+                            />
+                            Remember me
+                        </label>
+                        <a
+                            href="#"
                             className="text-[#7C3AED] font-medium hover:underline"
                         >
-                            Sign Up
-                        </Link>
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`w-full bg-[#7C3AED] flex items-center cursor-pointer justify-center gap-3 text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity ${submitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                        {submitting && (
+                            <AudioLines
+                                size={16}
+                                className="animate-spin text-white cursor-not-allowed"
+                            />
+                        )}
+                        {submitting ? "Logging in..." : "Login"}
+                    </button>
+                </form>
+
+                <div className="flex items-center gap-3 my-6">
+                    <div className="h-px flex-1 bg-gray-200" />
+                    <span className="text-[11px] tracking-wide text-gray-400 font-medium">
+                        OR CONTINUE WITH
+                    </span>
+                    <div className="h-px flex-1 bg-gray-200" />
+                </div>
+
+                <button
+                    onClick={handleGoogleLogin}
+                    disabled={googleSubmitting}
+                    className={`w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${googleSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                    {googleSubmitting ? (
+                        <AudioLines size={16} className="animate-spin text-[#7C3AED]" />
+                    ) : (
+                        <GoogleIcon />
+                    )}
+                    {googleSubmitting ? "Signing in..." : "Sign In With Google"}
+                </button>
+
+                <p className="text-center text-sm text-gray-500 mt-6">
+                    Don&apos;t have an account?{" "}
+                    <Link
+                        to="/signup"
+                        className="text-[#7C3AED] font-medium hover:underline"
+                    >
+                        Sign Up
+                    </Link>
+                </p>
+            </div>
+
+            {/* Right panel — promo */}
+            <div className="relative hidden lg:flex flex-col justify-center p-10 sm:p-12 bg-[#7C3AED] overflow-hidden">
+                <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+
+                <span className="relative inline-flex w-fit items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-[11px] font-semibold mb-5">
+                    v2.0 Performance
+                </span>
+
+                <h2 className="relative text-3xl font-bold text-white leading-snug mb-8 max-w-100">
+                    Automate your speech-to-text workflow.
+                </h2>
+
+                <div className="relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center mb-8">
+                    <div className="relative mb-4">
+                        <AudioLines
+                            className="text-[#7C3AED]"
+                            size={56}
+                            strokeWidth={1.75}
+                        />
+                        <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#7C3AED] flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                        </span>
+                    </div>
+                    <div className="w-full space-y-1.5 mb-3">
+                        <div className="h-1.5 rounded-full bg-purple-100 w-full" />
+                        <div className="h-1.5 rounded-full bg-purple-100 w-4/5 mx-auto" />
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                        Processing high-fidelity audio streams...
                     </p>
                 </div>
 
-                {/* Right panel — promo */}
-                <div className="relative hidden lg:flex flex-col justify-center p-10 sm:p-12 bg-[#7C3AED] overflow-hidden">
-                    <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+                <p className="relative text-sm text-white/90 italic leading-relaxed mb-4">
+                    "CaptionFlow has reduced our transcription turnaround by 80%
+                    while maintaining absolute linguistic precision."
+                </p>
 
-                    <span className="relative inline-flex w-fit items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-[11px] font-semibold mb-5">
-                        v2.0 Performance
-                    </span>
-
-                    <h2 className="relative text-3xl font-bold text-white leading-snug mb-8 max-w-100">
-                        Automate your speech-to-text workflow.
-                    </h2>
-
-                    <div className="relative bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center mb-8">
-                        <div className="relative mb-4">
-                            <AudioLines
-                                className="text-[#7C3AED]"
-                                size={56}
-                                strokeWidth={1.75}
-                            />
-                            <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#7C3AED] flex items-center justify-center">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                            </span>
-                        </div>
-                        <div className="w-full space-y-1.5 mb-3">
-                            <div className="h-1.5 rounded-full bg-purple-100 w-full" />
-                            <div className="h-1.5 rounded-full bg-purple-100 w-4/5 mx-auto" />
-                        </div>
-                        <p className="text-[11px] text-gray-400">
-                            Processing high-fidelity audio streams...
-                        </p>
+                <div className="relative flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/30 overflow-hidden flex items-center justify-center text-white text-xs font-semibold">
+                        SM
                     </div>
-
-                    <p className="relative text-sm text-white/90 italic leading-relaxed mb-4">
-                        "CaptionFlow has reduced our transcription turnaround by
-                        80% while maintaining absolute linguistic precision."
-                    </p>
-
-                    <div className="relative flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white/30 overflow-hidden flex items-center justify-center text-white text-xs font-semibold">
-                            SM
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-white">
-                                Sarah Mitchell
-                            </p>
-                            <p className="text-[11px] text-white/70">
-                                CTO at Kinetic Media
-                            </p>
-                        </div>
+                    <div>
+                        <p className="text-xs font-semibold text-white">
+                            Sarah Mitchell
+                        </p>
+                        <p className="text-[11px] text-white/70">
+                            CTO at Kinetic Media
+                        </p>
                     </div>
                 </div>
             </div>
-        );
-    }
-
+        </div>
+    );
+}

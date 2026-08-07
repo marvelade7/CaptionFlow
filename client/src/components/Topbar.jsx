@@ -50,9 +50,10 @@ export default function Topbar({ title, subtitle, showDate = false, onMenuClick 
                 </Link>
                 <div className="h-9 w-9 sm:h-10 sm:w-10 overflow-hidden rounded-full bg-[#ede9fe] ring-2 ring-white shrink-0">
                     <img
-                        src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(userName)}`}
+                        src={user?.profilePicture || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(userName)}`}
                         alt={userName}
                         className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
                     />
                 </div>
             </div>
