@@ -6,6 +6,8 @@ dotenv.config();
 const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const transcriptionRoutes = require("./routes/transcription.routes");
+const aiSummaryRoutes = require('./routes/aiSummary.route'); 
+
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/transcriptions", transcriptionRoutes);
+app.use('/api/ai-summary', aiSummaryRoutes);
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

@@ -60,6 +60,19 @@ const transcriptionSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    summary: {
+        text: { type: String, default: null },
+        generatedAt: { type: Date, default: null },
+    },
+    excerpts: {
+        items: [{ type: String }],
+        generatedAt: { type: Date, default: null },
+    },
+    aiProcessingStatus: {
+        type: String,
+        enum: ["not_requested", "processing", "completed", "failed"],
+        default: "not_requested",
+    },
 });
 
 module.exports = mongoose.model("Transcription", transcriptionSchema);
