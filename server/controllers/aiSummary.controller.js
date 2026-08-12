@@ -1,4 +1,4 @@
-const Transcription = require('../models/Transcription'); // adjust path to match your actual file location
+const Transcription = require('../models/transcription.model'); // adjust path to match your actual file location
 const { generateSummaryAndExcerpt } = require('../services/aiSummary');
 
 function generateSummary(req, res) {
@@ -10,7 +10,7 @@ function generateSummary(req, res) {
                 res.status(404).json({ message: 'Job not found' });
                 return null;
             }
-            if (job.userId.toString() !== req.user.id) {
+            if (job.userId.toString() !== req.user.id.toString()) {
                 res.status(403).json({ message: 'Not authorized for this job' });
                 return null;
             }

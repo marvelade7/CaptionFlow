@@ -2,8 +2,10 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import {
     UploadCloud, FileAudio, FileVideo, CheckCircle2,
-    XCircle, Loader2, Copy, Check, AlertTriangle, X, Download
+    XCircle, Loader2, Copy, Check, AlertTriangle, X, Download,
+    Sparkles, RefreshCw, FileText, File
 } from "lucide-react";
+import jsPDF from "jspdf";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { generateSrt, generateAss } from "../utils/subtitleHelpers";
@@ -66,6 +68,12 @@ export default function Upload() {
     // Polling result
     const [job, setJob]               = useState(null);  // full transcription object
     const [copied, setCopied]         = useState(false);
+
+    // AI Summary flow
+    const [aiStatus, setAiStatus]     = useState("idle"); // idle | generating | completed | failed
+    const [aiResult, setAiResult]     = useState(null);
+    const [aiError, setAiError]       = useState("");
+    const [aiCopiedStates, setAiCopiedStates] = useState({});
 
     // ── File validation ───────────────────────────────────────────────────────
     const validate = useCallback((f) => {
@@ -152,6 +160,90 @@ export default function Upload() {
         return () => clearInterval(interval);
     }, [jobId, job?.status]);
 
+    // ── Sync AI State ─────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (job && job.status === "completed") {
+            if (job.summary?.text && job.excerpts?.items?.length) {
+                setAiResult({ summary: job.summary, excerpts: job.excerpts });
+                setAiStatus("completed");
+            } else if (job.aiProcessingStatus === "failed") {
+                setAiStatus("failed");
+                setAiError("Previous AI generation failed.");
+            }
+        }
+    }, [job]);
+
+    // ── AI Generation & Download ──────────────────────────────────────────────
+    const generateAI = () => {
+        if (!jobId) return;
+        setAiStatus("generating");
+        setAiError("");
+
+        api.post(`/ai-summary/${jobId}/generate-summary`)
+            .then((res) => {
+                setAiResult(res.data);
+                setAiStatus("completed");
+                toast.success("AI Summary & Excerpts generated!");
+            })
+            .catch((err) => {
+                const msg = err.response?.data?.message || "Failed to generate AI content.";
+                setAiError(msg);
+                setAiStatus("failed");
+                toast.error(msg);
+            });
+    };
+
+    const getAITextContent = () => {
+        if (!aiResult) return "";
+        let content = "AI Summary:\n" + (aiResult.summary?.text || "") + "\n\n";
+        content += "Key Excerpts:\n";
+        if (aiResult.excerpts?.items) {
+            aiResult.excerpts.items.forEach((item, i) => {
+                content += `${i + 1}. ${item}\n\n`;
+            });
+        }
+        return content;
+    };
+
+    const downloadAITxt = () => {
+        if (!aiResult) return;
+        const blob = new Blob([getAITextContent()], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${job?.originalFileName?.split(".")[0] || 'transcript'}-AI-Summary.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const downloadAIPdf = () => {
+        if (!aiResult) return;
+        const doc = new jsPDF();
+        const splitText = doc.splitTextToSize(getAITextContent(), 170);
+        let y = 20;
+        for (let i = 0; i < splitText.length; i++) {
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.text(splitText[i], 20, y);
+            y += 7;
+        }
+        doc.save(`${job?.originalFileName?.split(".")[0] || 'transcript'}-AI-Summary.pdf`);
+    };
+
+    const copyAIText = (text, id) => {
+        navigator.clipboard.writeText(text);
+        setAiCopiedStates(prev => ({ ...prev, [id]: true }));
+        setTimeout(() => setAiCopiedStates(prev => ({ ...prev, [id]: false })), 2000);
+    };
+
+    const copyAllExcerpts = () => {
+        if (!aiResult?.excerpts?.items) return;
+        const text = aiResult.excerpts.items.map((item, i) => `${i + 1}. ${item}`).join("\n\n");
+        copyAIText(text, "all_excerpts");
+    };
+
     // ── Copy transcript ───────────────────────────────────────────────────────
     const copyTranscript = () => {
         navigator.clipboard.writeText(job?.transcript || "");
@@ -191,6 +283,10 @@ export default function Upload() {
         setUploadPct(0);
         setJobId(null);
         setJob(null);
+        setAiStatus("idle");
+        setAiResult(null);
+        setAiError("");
+        setAiCopiedStates({});
     };
 
     const ext = file ? fileExt(file.name) : null;
@@ -387,6 +483,137 @@ export default function Upload() {
                                     </div>
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* AI Summary & Excerpts Section */}
+                    {job.status === "completed" && (
+                        <div className="border-t border-[#ecebf3] px-6 py-6 bg-[#fcfbfe] rounded-b-2xl">
+                            {/* Header */}
+                            <div className="flex items-center gap-2 mb-4">
+                                <Sparkles size={20} className="text-[#7c3aed]" />
+                                <h3 className="text-base font-bold text-[#0f0b1f]">AI Summary & Excerpts</h3>
+                            </div>
+
+                            {/* State: Idle / Initial */}
+                            {aiStatus === "idle" && (
+                                <div className="rounded-xl border border-[#ecebf3] bg-white p-5 text-center shadow-sm">
+                                    <p className="text-sm text-[#6b6680] mb-4">
+                                        Unlock key insights! Optionally generate a concise summary and the most shareable excerpts from your transcript using AI.
+                                    </p>
+                                    <button
+                                        onClick={generateAI}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-[#7c3aed] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6d28d9]"
+                                    >
+                                        <Sparkles size={16} />
+                                        Generate Summary & Excerpts
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* State: Generating / Loading */}
+                            {aiStatus === "generating" && (
+                                <div className="rounded-xl border border-[#ecebf3] bg-white p-8 flex flex-col items-center justify-center shadow-sm">
+                                    <Loader2 size={28} className="animate-spin text-[#7c3aed] mb-3" />
+                                    <p className="text-sm font-semibold text-[#0f0b1f]">Analyzing your transcript...</p>
+                                    <p className="text-xs text-[#6b6680] mt-1">This may take a few moments.</p>
+                                </div>
+                            )}
+
+                            {/* State: Error */}
+                            {aiStatus === "failed" && (
+                                <div className="rounded-xl border border-red-100 bg-red-50 p-5 flex flex-col items-center shadow-sm text-center">
+                                    <AlertTriangle size={24} className="text-red-500 mb-2" />
+                                    <p className="text-sm font-semibold text-red-600 mb-1">Generation Failed</p>
+                                    <p className="text-xs text-red-500 mb-4">{aiError}</p>
+                                    <button
+                                        onClick={generateAI}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200"
+                                    >
+                                        <RefreshCw size={14} />
+                                        Try Again
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* State: Success */}
+                            {aiStatus === "completed" && aiResult && (
+                                <div className="flex flex-col gap-6">
+                                    {/* Summary */}
+                                    <div className="rounded-xl border border-[#ecebf3] bg-white p-5 shadow-sm">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-sm font-bold text-[#0f0b1f]">AI Summary</h4>
+                                            <button
+                                                onClick={() => copyAIText(aiResult.summary?.text, "summary")}
+                                                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-[#6b6680] hover:bg-[#f5f3ff] hover:text-[#7c3aed] transition"
+                                            >
+                                                {aiCopiedStates["summary"] ? <Check size={13} /> : <Copy size={13} />}
+                                                {aiCopiedStates["summary"] ? "Copied" : "Copy"}
+                                            </button>
+                                        </div>
+                                        <p className="text-sm text-[#3f3a52] leading-relaxed whitespace-pre-wrap">
+                                            {aiResult.summary?.text}
+                                        </p>
+                                    </div>
+
+                                    {/* Excerpts */}
+                                    <div>
+                                        <div className="flex items-center justify-between my-3 px-1">
+                                            <h4 className="text-sm font-bold text-[#0f0b1f]">Key Excerpts</h4>
+                                            <button
+                                                onClick={copyAllExcerpts}
+                                                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-[#6b6680] hover:bg-[#f5f3ff] hover:text-[#7c3aed] transition"
+                                            >
+                                                {aiCopiedStates["all_excerpts"] ? <Check size={13} /> : <Copy size={13} />}
+                                                {aiCopiedStates["all_excerpts"] ? "Copied All" : "Copy All"}
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-col gap-3">
+                                            {aiResult.excerpts?.items?.map((excerpt, idx) => (
+                                                <div key={idx} className="relative rounded-xl border border-[#ecebf3] bg-white p-4 shadow-sm group">
+                                                    <p className="text-sm text-[#3f3a52] leading-relaxed pr-10">
+                                                        <span className="font-bold text-[#7c3aed] mr-2">{idx + 1}.</span>
+                                                        {excerpt}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => copyAIText(excerpt, `excerpt_${idx}`)}
+                                                        className="absolute top-4 right-4 p-1.5 rounded-md text-[#a8a3bd] hover:bg-[#f5f3ff] hover:text-[#7c3aed] opacity-0 group-hover:opacity-100 transition focus:opacity-100"
+                                                        title="Copy excerpt"
+                                                    >
+                                                        {aiCopiedStates[`excerpt_${idx}`] ? <Check size={14} className="text-[#7c3aed]" /> : <Copy size={14} />}
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Actions */}
+                                    <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-[#ecebf3] pt-5">
+                                        <button
+                                            onClick={downloadAITxt}
+                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl border border-[#ecebf3] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f3a52] transition hover:border-[#7c3aed] hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
+                                        >
+                                            <FileText size={16} />
+                                            Download As TXT
+                                        </button>
+                                        <button
+                                            onClick={downloadAIPdf}
+                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl border border-[#ecebf3] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f3a52] transition hover:border-[#7c3aed] hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
+                                        >
+                                            <File size={16} />
+                                            Download As PDF
+                                        </button>
+                                        <button
+                                            onClick={generateAI}
+                                            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-[#7c3aed] hover:bg-[#ede9fe] transition"
+                                            title="Regenerate Summary & Excerpts"
+                                        >
+                                            <RefreshCw size={16} />
+                                            Regenerate
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

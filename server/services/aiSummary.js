@@ -26,12 +26,27 @@ Summary instructions:
 ${summaryInstruction}
 
 Excerpt rules:
-- Return 5 to 12 excerpts.
-- You must return at least 5 excerpts when the transcript contains at least 5 genuinely strong, quotable moments.
-- Never invent, paraphrase, combine, or alter excerpts just to reach the minimum.
-- Identify the most quotable, powerful, or shareable moments in the transcript — lines that would work well as standalone slides or social clips.
-- Each excerpt should be 1-3 sentences, copied verbatim from the transcript (do not paraphrase).
-- Order them by their position in the transcript.
+Key Point / Excerpt Rules:
+
+KEY POINT RULES:
+
+- Identify the most important teachings, lessons, principles, warnings, and insights from the sermon.
+- These are KEY POINTS, not quotations.
+- Distill each key point into a concise statement that captures what the preacher was teaching.
+- Do not simply copy large portions of the transcript.
+- You may paraphrase the preacher's explanation to make the key point concise and clear.
+- Preserve the preacher's intended meaning. Do not introduce ideas that were not taught.
+- Each key point should communicate ONE main idea.
+- Keep each key point concise, normally 1-2 sentences and preferably under 40 words.
+- If the preacher spends several sentences explaining the same idea, combine that explanation into one concise key point.
+- Prioritize the central teachings of the sermon over minor observations or introductory explanations.
+- Do not select definitions, greetings, transitions, repeated statements, or conversational filler unless they contain an important teaching.
+- Do not use Bible verses or direct scripture quotations as key points.
+- When a scripture is discussed, capture the lesson the preacher draws from the scripture rather than repeating the scripture.
+- Do not use prayers, declarations, blessings, or prophetic statements as key points.
+- Do not select a statement merely because it sounds inspirational or would make a good social-media quote.
+- Avoid duplicate or overlapping key points.
+- Order the key points according to the progression of the sermon.
 
 Transcript:
 """
