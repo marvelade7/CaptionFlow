@@ -2,19 +2,19 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import {
     UploadCloud, FileAudio, FileVideo, CheckCircle2,
-    XCircle, Loader2, Copy, Check, AlertTriangle, X, Download,
-    Sparkles, RefreshCw, FileText, File
+    XCircle, Loader2, Copy, Check, AlertTriangle, X, Download, Sparkles
 } from "lucide-react";
-import jsPDF from "jspdf";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { generateSrt, generateAss } from "../utils/subtitleHelpers";
+import AIModal from "../components/AIModal";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ACCEPTED = ["mp3", "wav", "m4a", "flac", "mp4", "mov", "mkv", "webm"];
 const MAX_BYTES = 300 * 1024 * 1024; // 300 MB
 const AUDIO_EXTS = ["mp3", "wav", "m4a", "flac"];
-const POLL_INTERVAL = 3000; // ms
+const POLL_INTERVAL = 3000;    // ms between status checks
+const POLL_TIMEOUT_MS = 300_000; // 5 min ceiling — bail out if still running after this
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function formatBytes(b) {
@@ -63,19 +63,17 @@ export default function Upload() {
     // Upload flow
     const [uploading, setUploading]         = useState(false);
     const [uploadPct, setUploadPct]         = useState(0);
-    const [jobId, setJobId]                 = useState(null);  // saved transcription _id
+    const [jobId, setJobId]                 = useState(null);
     const [transcriptionStartTime, setTranscriptionStartTime] = useState(null);
     const [transcriptionPct, setTranscriptionPct]             = useState(0);
+    const [pollStartTime, setPollStartTime] = useState(null);
 
     // Polling result
-    const [job, setJob]               = useState(null);  // full transcription object
+    const [job, setJob]               = useState(null);
     const [copied, setCopied]         = useState(false);
 
-    // AI Summary flow
-    const [aiStatus, setAiStatus]     = useState("idle"); // idle | generating | completed | failed
-    const [aiResult, setAiResult]     = useState(null);
-    const [aiError, setAiError]       = useState("");
-    const [aiCopiedStates, setAiCopiedStates] = useState({});
+    // AI modal
+    const [showAIModal, setShowAIModal] = useState(false);
 
     // ── File validation ───────────────────────────────────────────────────────
     const validate = useCallback((f) => {
@@ -136,7 +134,9 @@ export default function Upload() {
                 if (res.data.success) {
                     setJobId(res.data.data._id);
                     setJob(res.data.data);
-                    setTranscriptionStartTime(Date.now()); // kick off progress bar
+                    const now = Date.now();
+                    setTranscriptionStartTime(now); // kick off progress bar
+                    setPollStartTime(now);           // start polling timeout clock
                     setTranscriptionPct(0);
                     toast.success("File uploaded! Transcription started…");
                 }
@@ -154,15 +154,27 @@ export default function Upload() {
         if (!jobId || job?.status === "completed" || job?.status === "failed") return;
 
         const interval = setInterval(() => {
+            // Hard ceiling: if we've been polling for too long, something is wrong.
+            if (pollStartTime && Date.now() - pollStartTime > POLL_TIMEOUT_MS) {
+                clearInterval(interval);
+                setError("Transcription is taking too long — this may be a connection issue. Please try again.");
+                toast.error("Transcription timed out. Please try again.", { duration: 6000 });
+                setJob((prev) => ({ ...prev, status: "failed", errorMessage: "Request timed out. Please check your connection and try again." }));
+                return;
+            }
+
             api.get(`/transcriptions/${jobId}`)
                 .then((res) => {
                     if (res.data.success) setJob(res.data.data);
                 })
-                .catch(() => clearInterval(interval));
+                .catch(() => {
+                    // Don't kill the interval on a single failed poll — could be a blip.
+                    // The ceiling above handles persistent failures.
+                });
         }, POLL_INTERVAL);
 
         return () => clearInterval(interval);
-    }, [jobId, job?.status]);
+    }, [jobId, job?.status, pollStartTime]);
 
     // ── Estimated transcription progress bar ─────────────────────────────────
     // Uses elapsed time to animate toward 99%; snaps to 100% on completion.
@@ -178,14 +190,16 @@ export default function Upload() {
 
         if (!isProcessing) return;
 
-        // Tick every 500ms and advance the bar with a log curve capped at 99%
-        const ESTIMATED_DURATION_MS = 60_000; // tune this to your average processing time
+        // Tick every second and advance the bar with a log curve capped at 99%.
+        // ESTIMATED_DURATION_MS is a ceiling — if the job finishes early the bar
+        // snaps to 100% immediately. Set it to a value slightly above your worst case.
+        const ESTIMATED_DURATION_MS = 120_000;
         const timer = setInterval(() => {
             const elapsed = Date.now() - transcriptionStartTime;
-            // log curve: fast early progress, slow near the end
-            const raw = Math.log1p((elapsed / ESTIMATED_DURATION_MS) * (Math.E - 1)) / 1 * 99;
+            // log curve: fast early progress, decelerates near the end
+            const raw = Math.log1p((elapsed / ESTIMATED_DURATION_MS) * (Math.E - 1)) * 99;
             setTranscriptionPct(Math.min(Math.round(raw), 99));
-        }, 500);
+        }, 1000);
 
         return () => clearInterval(timer);
     }, [transcriptionStartTime, job?.status]);
@@ -315,10 +329,8 @@ export default function Upload() {
         setJob(null);
         setTranscriptionStartTime(null);
         setTranscriptionPct(0);
-        setAiStatus("idle");
-        setAiResult(null);
-        setAiError("");
-        setAiCopiedStates({});
+        setPollStartTime(null);
+        setShowAIModal(false);
     };
 
     const ext = file ? fileExt(file.name) : null;
@@ -326,7 +338,13 @@ export default function Upload() {
     const FileIcon = isAudio ? FileAudio : FileVideo;
 
     return (
-        <div className="flex flex-col gap-6" data-aos="fade-up">
+        <>
+            {/* ── AI Summary Modal */}
+            {showAIModal && job && (
+                <AIModal job={job} onClose={() => setShowAIModal(false)} />
+            )}
+
+            <div className="flex flex-col gap-6" data-aos="fade-up">
 
             {/* ── Drop zone ─────────────────────────────────────────────────── */}
             {!jobId && (
@@ -541,134 +559,25 @@ export default function Upload() {
                         </div>
                     )}
 
-                    {/* AI Summary & Excerpts Section */}
+                    {/* ── AI Summary button row */}
                     {job.status === "completed" && (
-                        <div className="border-t border-[#ecebf3] px-6 py-6 bg-[#fcfbfe] rounded-b-2xl">
-                            {/* Header */}
-                            <div className="flex items-center gap-2 mb-4">
-                                <Sparkles size={20} className="text-[#7c3aed]" />
-                                <h3 className="text-base font-bold text-[#0f0b1f]">AI Summary & Excerpts</h3>
+                        <div className="border-t border-[#ecebf3] bg-[#fcfbfe] rounded-b-2xl px-6 py-4 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <Sparkles size={16} className="text-[#7c3aed]" />
+                                <p className="text-sm font-semibold text-[#0f0b1f]">AI Summary & Excerpts</p>
+                                {job.summary?.text && (
+                                    <span className="rounded-full bg-[#f0eeff] px-2 py-0.5 text-[10px] font-semibold text-[#7c3aed]">
+                                        Ready
+                                    </span>
+                                )}
                             </div>
-
-                            {/* State: Idle / Initial */}
-                            {aiStatus === "idle" && (
-                                <div className="rounded-xl border border-[#ecebf3] bg-white p-5 text-center shadow-sm">
-                                    <p className="text-sm text-[#6b6680] mb-4">
-                                        Unlock key insights! Optionally generate a concise summary and the most shareable excerpts from your transcript using AI.
-                                    </p>
-                                    <button
-                                        onClick={generateAI}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-[#7c3aed] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#6d28d9]"
-                                    >
-                                        <Sparkles size={16} />
-                                        Generate Summary & Excerpts
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* State: Generating / Loading */}
-                            {aiStatus === "generating" && (
-                                <div className="rounded-xl border border-[#ecebf3] bg-white p-8 flex flex-col items-center justify-center shadow-sm">
-                                    <Loader2 size={28} className="animate-spin text-[#7c3aed] mb-3" />
-                                    <p className="text-sm font-semibold text-[#0f0b1f]">Analyzing your transcript...</p>
-                                    <p className="text-xs text-[#6b6680] mt-1">This may take a few moments.</p>
-                                </div>
-                            )}
-
-                            {/* State: Error */}
-                            {aiStatus === "failed" && (
-                                <div className="rounded-xl border border-red-100 bg-red-50 p-5 flex flex-col items-center shadow-sm text-center">
-                                    <AlertTriangle size={24} className="text-red-500 mb-2" />
-                                    <p className="text-sm font-semibold text-red-600 mb-1">Generation Failed</p>
-                                    <p className="text-xs text-red-500 mb-4">{aiError}</p>
-                                    <button
-                                        onClick={generateAI}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200"
-                                    >
-                                        <RefreshCw size={14} />
-                                        Try Again
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* State: Success */}
-                            {aiStatus === "completed" && aiResult && (
-                                <div className="flex flex-col gap-6">
-                                    {/* Summary */}
-                                    <div className="rounded-xl border border-[#ecebf3] bg-white p-5 shadow-sm">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-sm font-bold text-[#0f0b1f]">AI Summary</h4>
-                                            <button
-                                                onClick={() => copyAIText(aiResult.summary?.text, "summary")}
-                                                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-[#6b6680] hover:bg-[#f5f3ff] hover:text-[#7c3aed] transition"
-                                            >
-                                                {aiCopiedStates["summary"] ? <Check size={13} /> : <Copy size={13} />}
-                                                {aiCopiedStates["summary"] ? "Copied" : "Copy"}
-                                            </button>
-                                        </div>
-                                        <p className="text-sm text-[#3f3a52] leading-relaxed whitespace-pre-wrap">
-                                            {aiResult.summary?.text}
-                                        </p>
-                                    </div>
-
-                                    {/* Excerpts */}
-                                    <div>
-                                        <div className="flex items-center justify-between my-3 px-1">
-                                            <h4 className="text-sm font-bold text-[#0f0b1f]">Key Excerpts</h4>
-                                            <button
-                                                onClick={copyAllExcerpts}
-                                                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-[#6b6680] hover:bg-[#f5f3ff] hover:text-[#7c3aed] transition"
-                                            >
-                                                {aiCopiedStates["all_excerpts"] ? <Check size={13} /> : <Copy size={13} />}
-                                                {aiCopiedStates["all_excerpts"] ? "Copied All" : "Copy All"}
-                                            </button>
-                                        </div>
-                                        <div className="flex flex-col gap-3">
-                                            {aiResult.excerpts?.items?.map((excerpt, idx) => (
-                                                <div key={idx} className="relative rounded-xl border border-[#ecebf3] bg-white p-4 shadow-sm group">
-                                                    <p className="text-sm text-[#3f3a52] leading-relaxed pr-10">
-                                                        <span className="font-bold text-[#7c3aed] mr-2">{idx + 1}.</span>
-                                                        {excerpt}
-                                                    </p>
-                                                    <button
-                                                        onClick={() => copyAIText(excerpt, `excerpt_${idx}`)}
-                                                        className="absolute top-4 right-4 p-1.5 rounded-md text-[#a8a3bd] hover:bg-[#f5f3ff] hover:text-[#7c3aed] opacity-0 group-hover:opacity-100 transition focus:opacity-100"
-                                                        title="Copy excerpt"
-                                                    >
-                                                        {aiCopiedStates[`excerpt_${idx}`] ? <Check size={14} className="text-[#7c3aed]" /> : <Copy size={14} />}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Footer Actions */}
-                                    <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-[#ecebf3] pt-5">
-                                        <button
-                                            onClick={downloadAITxt}
-                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl border border-[#ecebf3] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f3a52] transition hover:border-[#7c3aed] hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
-                                        >
-                                            <FileText size={16} />
-                                            Download As TXT
-                                        </button>
-                                        <button
-                                            onClick={downloadAIPdf}
-                                            className="flex flex-1 justify-center items-center gap-2 rounded-xl border border-[#ecebf3] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f3a52] transition hover:border-[#7c3aed] hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
-                                        >
-                                            <File size={16} />
-                                            Download As PDF
-                                        </button>
-                                        <button
-                                            onClick={generateAI}
-                                            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-[#7c3aed] hover:bg-[#ede9fe] transition"
-                                            title="Regenerate Summary & Excerpts"
-                                        >
-                                            <RefreshCw size={16} />
-                                            Regenerate
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                            <button
+                                onClick={() => setShowAIModal(true)}
+                                className="flex items-center gap-1.5 rounded-lg border border-[#e0dbf7] bg-[#f5f3ff] px-3 py-2 text-xs font-semibold text-[#7c3aed] transition hover:bg-[#ede9fe] hover:border-[#c4b5fd]"
+                            >
+                                <Sparkles size={13} />
+                                {job.summary?.text ? "View Summary" : "Generate Summary"}
+                            </button>
                         </div>
                     )}
 
@@ -681,9 +590,11 @@ export default function Upload() {
                                 {job.errorMessage || "Something went wrong. Please try again."}
                             </p>
                         </div>
+
                     )}
                 </div>
             )}
         </div>
+        </>
     );
 }
