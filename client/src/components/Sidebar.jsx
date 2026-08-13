@@ -10,8 +10,17 @@ import {
     Settings as SettingsIcon,
     LogOut,
     X,
+    Shield,
+    BarChart2,
+    Users,
+    Activity,
+    AlertTriangle,
+    List,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+
+// ── Navigation configuration ──────────────────────────────────────────────────
+// Centralised here so role checks never need to be scattered across components.
 
 const NAV_ITEMS = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutGrid, end: true },
@@ -20,16 +29,29 @@ const NAV_ITEMS = [
     { to: "/dashboard/transcripts", label: "Transcripts", icon: FileText },
     { to: "/dashboard/downloads", label: "Downloads", icon: Download },
 ];
+
 const PREFERENCE_ITEMS = [
     { to: "/dashboard/account", label: "Account", icon: User },
     { to: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-function NavItem({ to, label, icon: Icon, onClick }) {
+// Admin nav items — only rendered when user.role === "admin"
+const ADMIN_NAV_ITEMS = [
+    { to: "/dashboard/admin", label: "Overview", icon: Shield, end: true },
+    { to: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart2 },
+    { to: "/dashboard/admin/users", label: "Users", icon: Users },
+    { to: "/dashboard/admin/transcriptions", label: "All Transcriptions", icon: List },
+    { to: "/dashboard/admin/activity", label: "Activity", icon: Activity },
+    { to: "/dashboard/admin/errors", label: "Errors", icon: AlertTriangle },
+];
+
+// ── NavItem ───────────────────────────────────────────────────────────────────
+
+function NavItem({ to, label, icon: Icon, end, onClick }) {
     return (
         <NavLink
             to={to}
-            end={true}
+            end={end}
             onClick={onClick}
             className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
@@ -45,9 +67,33 @@ function NavItem({ to, label, icon: Icon, onClick }) {
     );
 }
 
+function AdminNavItem({ to, label, icon: Icon, end, onClick }) {
+    return (
+        <NavLink
+            to={to}
+            end={end}
+            onClick={onClick}
+            className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                        ? "bg-[#4c1d95] text-white shadow-[0_1px_2px_rgba(15,11,31,0.08),0_8px_24px_rgba(76,29,149,0.12)]"
+                        : "text-[#5b21b6] hover:bg-[#ede9fe] hover:text-[#4c1d95]"
+                }`
+            }
+        >
+            <Icon size={17} strokeWidth={2} />
+            <span>{label}</span>
+        </NavLink>
+    );
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
 export default function Sidebar({ isOpen, onClose }) {
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const isAdmin = user?.role === "admin";
+
     const logoutHandler = () => {
         if (onClose) onClose();
         logout();
@@ -56,7 +102,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
     const sidebarContent = (
         <div className="flex h-full flex-col justify-between px-4 py-6">
-            <div>
+            <div className="overflow-y-auto flex-1 scrollbar-hide">
                 {/* Brand & Mobile Close Button */}
                 <div className="mb-8 flex items-center justify-between px-2">
                     <Link to="/" className="flex items-center sm:gap-2 gap-1">
@@ -92,13 +138,36 @@ export default function Sidebar({ isOpen, onClose }) {
                         <NavItem key={item.to} {...item} onClick={onClose} />
                     ))}
                 </nav>
+
+                {/* ── Admin section — only visible to admins ─────────────────── */}
+                {isAdmin && (
+                    <div className="mt-5">
+                        {/* Separator */}
+                        <div className="mx-3 mb-3 border-t border-[#ede9fe]" />
+
+                        {/* Section label */}
+                        <div className="mb-1.5 flex items-center gap-1.5 px-3">
+                            <Shield size={11} className="text-[#7c3aed]" strokeWidth={2.5} />
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#7c3aed]">
+                                Admin
+                            </p>
+                        </div>
+
+                        {/* Admin nav items */}
+                        <nav className="flex flex-col gap-1">
+                            {ADMIN_NAV_ITEMS.map((item) => (
+                                <AdminNavItem key={item.to} {...item} onClick={onClose} />
+                            ))}
+                        </nav>
+                    </div>
+                )}
             </div>
 
             {/* Logout */}
             <button
                 type="button"
                 onClick={logoutHandler}
-                className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
+                className="mt-4 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
             >
                 <LogOut size={18} />
                 Logout

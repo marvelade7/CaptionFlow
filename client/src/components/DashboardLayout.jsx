@@ -17,6 +17,7 @@ export default function DashboardLayout() {
     }, [pathname]);
 
     const PAGE_META = {
+        // ── User pages ────────────────────────────────────────────────────
         "/dashboard": {
             title: `Welcome back, ${user?.firstName || "User"}`,
             subtitle:
@@ -45,6 +46,31 @@ export default function DashboardLayout() {
         "/dashboard/settings": {
             title: "Settings",
             subtitle: "Configure CaptionFlow to fit your workflow.",
+        },
+        // ── Admin pages ───────────────────────────────────────────────────
+        "/dashboard/admin": {
+            title: "Admin Overview",
+            subtitle: "Platform-wide stats and health at a glance.",
+        },
+        "/dashboard/admin/analytics": {
+            title: "Analytics",
+            subtitle: "Trends, charts, and usage patterns across CaptionFlow.",
+        },
+        "/dashboard/admin/users": {
+            title: "Users",
+            subtitle: "Browse, search, and manage all CaptionFlow accounts.",
+        },
+        "/dashboard/admin/transcriptions": {
+            title: "All Transcriptions",
+            subtitle: "Every transcription job across all users.",
+        },
+        "/dashboard/admin/activity": {
+            title: "Activity",
+            subtitle: "Real-time event feed across the platform.",
+        },
+        "/dashboard/admin/errors": {
+            title: "Error Log",
+            subtitle: "Application errors and failure events.",
         },
     };
 
