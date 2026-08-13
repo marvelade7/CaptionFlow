@@ -58,25 +58,28 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
             throw new Error("FFmpeg failed to generate audio chunks.");
         }
 
-        // 3. Process each chunk sequentially
+        // 3. Process all chunks IN PARALLEL for maximum speed
+        const transcriptionResults = await Promise.all(
+            chunks.map((chunkPath) =>
+                groq.audio.transcriptions.create({
+                    file: fs.createReadStream(chunkPath),
+                    model: "whisper-large-v3-turbo", // ~3x faster than v3 with near-identical accuracy
+                    response_format: "verbose_json",
+                    language: "en",
+                    temperature: 0.0,
+                })
+            )
+        );
+
+        // Stitch results in order (Promise.all preserves order)
         let fullTranscript = "";
         let fullSegments = [];
         let totalDuration = 0;
 
-        for (let i = 0; i < chunks.length; i++) {
-            const chunkPath = chunks[i];
-            
-            const transcription = await groq.audio.transcriptions.create({
-                file: fs.createReadStream(chunkPath),
-                model: "whisper-large-v3",
-                response_format: "verbose_json",
-                language: "en",
-                temperature: 0.0,
-            });
-
+        transcriptionResults.forEach((transcription, i) => {
             // Stitch text
             fullTranscript += (fullTranscript ? " " : "") + transcription.text;
-            
+
             // Stitch segments with time offset (10 minutes = 600 seconds per chunk)
             const timeOffset = i * 600;
             if (transcription.segments) {
@@ -88,15 +91,14 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
                     });
                 });
             }
-            
-            // For the last chunk, we add its exact duration to the total.
-            // For preceding chunks, we add exactly 600s since they were perfectly split.
+
+            // For the last chunk, use its exact duration; others are exactly 600s
             if (i === chunks.length - 1) {
                 totalDuration += (transcription.duration || 0);
             } else {
                 totalDuration += 600;
             }
-        }
+        });
 
         const processingTime = Math.round((Date.now() - startTime) / 1000);
 

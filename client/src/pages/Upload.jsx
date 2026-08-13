@@ -61,9 +61,11 @@ export default function Upload() {
     const [error, setError]       = useState("");
 
     // Upload flow
-    const [uploading, setUploading]   = useState(false);
-    const [uploadPct, setUploadPct]   = useState(0);
-    const [jobId, setJobId]           = useState(null);  // saved transcription _id
+    const [uploading, setUploading]         = useState(false);
+    const [uploadPct, setUploadPct]         = useState(0);
+    const [jobId, setJobId]                 = useState(null);  // saved transcription _id
+    const [transcriptionStartTime, setTranscriptionStartTime] = useState(null);
+    const [transcriptionPct, setTranscriptionPct]             = useState(0);
 
     // Polling result
     const [job, setJob]               = useState(null);  // full transcription object
@@ -134,6 +136,8 @@ export default function Upload() {
                 if (res.data.success) {
                     setJobId(res.data.data._id);
                     setJob(res.data.data);
+                    setTranscriptionStartTime(Date.now()); // kick off progress bar
+                    setTranscriptionPct(0);
                     toast.success("File uploaded! Transcription started…");
                 }
             })
@@ -159,6 +163,32 @@ export default function Upload() {
 
         return () => clearInterval(interval);
     }, [jobId, job?.status]);
+
+    // ── Estimated transcription progress bar ─────────────────────────────────
+    // Uses elapsed time to animate toward 99%; snaps to 100% on completion.
+    useEffect(() => {
+        if (!transcriptionStartTime) return;
+        const isProcessing = job?.status === "uploaded" || job?.status === "queued" || job?.status === "processing";
+        const isDone       = job?.status === "completed" || job?.status === "failed";
+
+        if (isDone) {
+            setTranscriptionPct(100);
+            return;
+        }
+
+        if (!isProcessing) return;
+
+        // Tick every 500ms and advance the bar with a log curve capped at 99%
+        const ESTIMATED_DURATION_MS = 60_000; // tune this to your average processing time
+        const timer = setInterval(() => {
+            const elapsed = Date.now() - transcriptionStartTime;
+            // log curve: fast early progress, slow near the end
+            const raw = Math.log1p((elapsed / ESTIMATED_DURATION_MS) * (Math.E - 1)) / 1 * 99;
+            setTranscriptionPct(Math.min(Math.round(raw), 99));
+        }, 500);
+
+        return () => clearInterval(timer);
+    }, [transcriptionStartTime, job?.status]);
 
     // ── Sync AI State ─────────────────────────────────────────────────────────
     useEffect(() => {
@@ -283,6 +313,8 @@ export default function Upload() {
         setUploadPct(0);
         setJobId(null);
         setJob(null);
+        setTranscriptionStartTime(null);
+        setTranscriptionPct(0);
         setAiStatus("idle");
         setAiResult(null);
         setAiError("");
@@ -412,13 +444,36 @@ export default function Upload() {
 
                     {/* Processing state */}
                     {(job.status === "uploaded" || job.status === "queued" || job.status === "processing") && (
-                        <div className="flex flex-col items-center gap-3 py-12">
-                            <Loader2 size={32} className="animate-spin text-[#7c3aed]" />
-                            <p className="text-sm font-semibold text-[#0f0b1f]">
-                                Transcribing your file…
-                            </p>
-                            <p className="text-xs text-[#6b6680]">
-                                This usually takes 10–30 seconds. Hang tight!
+                        <div className="flex flex-col items-center gap-4 px-8 py-10">
+                            {/* Icon + label */}
+                            <div className="flex items-center gap-2">
+                                <Loader2 size={16} className="animate-spin text-[#7c3aed]" />
+                                <p className="text-sm font-semibold text-[#0f0b1f]">
+                                    Transcribing your file…
+                                </p>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="w-full max-w-sm">
+                                <div className="flex justify-between text-xs text-[#6b6680] mb-1.5">
+                                    <span>
+                                        {transcriptionPct < 30 ? "Preparing audio chunks…"
+                                            : transcriptionPct < 70 ? "Running AI transcription…"
+                                            : transcriptionPct < 95 ? "Stitching results…"
+                                            : "Almost done…"}
+                                    </span>
+                                    <span>{transcriptionPct}%</span>
+                                </div>
+                                <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#ede9fe]">
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-[#7c3aed] to-[#a78bfa] transition-all duration-500 ease-out"
+                                        style={{ width: `${transcriptionPct}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-[#a8a3bd]">
+                                Larger files take longer — you can leave this tab open.
                             </p>
                         </div>
                     )}
