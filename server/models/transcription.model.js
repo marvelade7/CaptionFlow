@@ -73,6 +73,38 @@ const transcriptionSchema = new Schema({
         enum: ["not_requested", "processing", "completed", "failed"],
         default: "not_requested",
     },
+    // ── Analytics / lifecycle timestamps ────────────────────────────
+    startedAt: {
+        type: Date,
+        default: null,
+    },
+    completedAt: {
+        type: Date,
+        default: null,
+    },
+    failedAt: {
+        type: Date,
+        default: null,
+    },
+    // ── Chunk analytics ──────────────────────────────────────────
+    chunkCount: {
+        type: Number,
+        default: 0,
+    },
+    successfulChunks: {
+        type: Number,
+        default: 0,
+    },
+    failedChunks: {
+        type: Number,
+        default: 0,
+    },
 });
+
+// ── Indexes ──────────────────────────────────────────────────────────────────
+transcriptionSchema.index({ userId: 1, createdAt: -1 });
+transcriptionSchema.index({ status: 1, createdAt: -1 });
+transcriptionSchema.index({ createdAt: -1 });
+transcriptionSchema.index({ expiresAt: 1 });
 
 module.exports = mongoose.model("Transcription", transcriptionSchema);

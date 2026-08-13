@@ -1,6 +1,8 @@
 const fs = require("fs");
 const Transcription = require("../models/transcription.model");
 const { transcribeAudioJob } = require("../services/transcription.service");
+const { logActivity } = require("../services/activity.service");
+const DownloadHistory = require("../models/downloadHistory.model");
 
 const uploadFile = (req, res) => {
     const file = req.file;
@@ -55,6 +57,12 @@ const uploadFile = (req, res) => {
             // Fire-and-forget: Groq transcribes in the background,
             // updates the DB, then deletes the temp file.
             transcribeAudioJob(file.path, saved._id);
+            
+            // Log upload activity
+            logActivity("FILE_UPLOADED", req.user.id, {
+                fileSize: file.size,
+                fileType: fileExtension,
+            }, req);
 
             res.status(200).json({
                 success: true,
@@ -145,9 +153,35 @@ const updateTranscriptionStatus = (req, res) => {
         });
 };
 
+const trackDownload = (req, res) => {
+    const { format } = req.body;
+    
+    if (!["txt", "srt", "ass"].includes(format)) {
+        return res.status(400).json({ success: false, message: "Invalid format" });
+    }
+
+    DownloadHistory.create({
+        user: req.user.id,
+        transcription: req.params.id,
+        format,
+        ipAddress: req.ip || req.connection.remoteAddress || "",
+        userAgent: req.headers["user-agent"] || "",
+    })
+    .then(() => {
+        // Also log the activity
+        logActivity("FILE_DOWNLOADED", req.user.id, { format, transcriptionId: req.params.id }, req);
+        res.status(200).json({ success: true });
+    })
+    .catch((err) => {
+        console.error("Failed to track download:", err);
+        res.status(500).json({ success: false, message: "Failed to track download" });
+    });
+};
+
 module.exports = {
     uploadFile,
     getUserTranscriptions,
     getTranscriptionById,
     updateTranscriptionStatus,
+    trackDownload,
 };

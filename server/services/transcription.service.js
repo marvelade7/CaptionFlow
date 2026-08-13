@@ -4,6 +4,7 @@ const Transcription = require("../models/transcription.model");
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegStatic = require("ffmpeg-static");
 const path = require("path");
+const { logActivity } = require("./activity.service");
 
 // Configure ffmpeg to use the static binary
 ffmpeg.setFfmpegPath(ffmpegStatic);
@@ -39,7 +40,12 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
         }
 
         // 1. Update status to processing
-        await Transcription.findByIdAndUpdate(transcriptionId, { status: "processing" });
+        await Transcription.findByIdAndUpdate(transcriptionId, { status: "processing", startedAt: new Date() });
+        
+        // Find user for analytics
+        const doc = await Transcription.findById(transcriptionId);
+        const userId = doc ? doc.userId : null;
+        if (userId) logActivity("TRANSCRIPTION_STARTED", userId, { transcriptionId }).catch(() => {});
 
         // 2. Chunk the file — strategy depends on the input format
         const CHUNK_DURATION_S = 300; // 5-minute segments
@@ -161,20 +167,32 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
         console.log(`[Transcription] ✅ Total processingTime: ${processingTime}s`);
 
         // 4. Update DB with success
-        await Transcription.findByIdAndUpdate(transcriptionId, {
+        const updatedDoc = await Transcription.findByIdAndUpdate(transcriptionId, {
             transcript: fullTranscript.trim(),
             segments: fullSegments,
             duration: Math.round(totalDuration),
             status: "completed",
             processingTime,
+            completedAt: new Date(),
+            chunkCount: chunks.length,
+            successfulChunks: chunks.length,
+            failedChunks: 0,
         });
+        
+        if (updatedDoc && updatedDoc.userId) {
+            logActivity("TRANSCRIPTION_COMPLETED", updatedDoc.userId, { transcriptionId, processingTime }).catch(() => {});
+        }
 
     } catch (error) {
         console.error("Transcription Job Error:", error.message);
-        await Transcription.findByIdAndUpdate(transcriptionId, {
+        const updatedDoc = await Transcription.findByIdAndUpdate(transcriptionId, {
             status: "failed",
             errorMessage: error.message || "Failed to process audio file.",
+            failedAt: new Date(),
         });
+        if (updatedDoc && updatedDoc.userId) {
+            logActivity("TRANSCRIPTION_FAILED", updatedDoc.userId, { transcriptionId, error: error.message }).catch(() => {});
+        }
     } finally {
         // 5. Always clean up all temp files
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);

@@ -1,5 +1,7 @@
-const Transcription = require('../models/transcription.model'); // adjust path to match your actual file location
+const Transcription = require('../models/transcription.model');
 const { generateSummaryAndExcerpt } = require('../services/aiSummary');
+const DownloadHistory = require("../models/downloadHistory.model");
+const { logActivity } = require("../services/activity.service");
 
 function generateSummary(req, res) {
     const { jobId } = req.params;
@@ -70,6 +72,16 @@ function downloadSummary(req, res) {
             res.setHeader('Content-Type', 'text/plain');
             res.setHeader('Content-Disposition', `attachment; filename="summary-${jobId}.txt"`);
             res.send(job.summary.text);
+            
+            // Track download
+            DownloadHistory.create({
+                user: req.user.id,
+                transcription: jobId,
+                format: "summary",
+                ipAddress: req.ip || req.connection.remoteAddress || "",
+                userAgent: req.headers["user-agent"] || "",
+            }).catch(() => {});
+            logActivity("FILE_DOWNLOADED", req.user.id, { format: "summary", transcriptionId: jobId }, req);
         })
         .catch((err) => {
             console.error('downloadSummary error:', err.message);
@@ -97,6 +109,16 @@ function downloadExcerpts(req, res) {
             res.setHeader('Content-Type', 'text/plain');
             res.setHeader('Content-Disposition', `attachment; filename="excerpts-${jobId}.txt"`);
             res.send(formatted);
+            
+            // Track download
+            DownloadHistory.create({
+                user: req.user.id,
+                transcription: jobId,
+                format: "excerpts",
+                ipAddress: req.ip || req.connection.remoteAddress || "",
+                userAgent: req.headers["user-agent"] || "",
+            }).catch(() => {});
+            logActivity("FILE_DOWNLOADED", req.user.id, { format: "excerpts", transcriptionId: jobId }, req);
         })
         .catch((err) => {
             console.error('downloadExcerpts error:', err.message);

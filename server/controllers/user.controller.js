@@ -2,6 +2,8 @@ const fs = require("fs");
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const LoginHistory = require("../models/loginHistory.model");
+const { logActivity } = require("../services/activity.service");
 const cloudinary = require("../config/cloudinary.config");
 const auth = require("../config/firebaseAdmin");
 
@@ -39,6 +41,9 @@ const createUser = (req, res) => {
         })
         .then((user) => {
             if (!user) return;
+            
+            // Fire-and-forget analytics
+            logActivity("USER_REGISTERED", user._id, {}, req);
 
             const userData = user.toObject();
             delete userData.password;
@@ -83,6 +88,15 @@ const signInUser = (req, res) => {
             );
 
             if (!isPasswordCorrect) {
+                // Log failed attempt
+                LoginHistory.create({
+                    user: user._id,
+                    success: false,
+                    failureReason: "Invalid password",
+                    ipAddress: req.ip || req.connection.remoteAddress || "",
+                    userAgent: req.headers["user-agent"] || "",
+                }).catch(() => {});
+                
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password.",
@@ -99,6 +113,22 @@ const signInUser = (req, res) => {
 
             const userData = user.toObject();
             delete userData.password;
+            
+            // Fire-and-forget analytics
+            logActivity("USER_LOGGED_IN", user._id, { method: "email" }, req);
+            
+            LoginHistory.create({
+                user: user._id,
+                success: true,
+                ipAddress: req.ip || req.connection.remoteAddress || "",
+                userAgent: req.headers["user-agent"] || "",
+            }).catch(() => {});
+            
+            // Update user stats
+            user.lastLoginAt = new Date();
+            user.loginCount = (user.loginCount || 0) + 1;
+            user.lastActivityAt = new Date();
+            user.save().catch(() => {});
 
             res.status(200).json({
                 success: true,
@@ -160,6 +190,22 @@ const signInWithGoogle = (req, res) => {
 
             const userData = user.toObject();
             delete userData.password;
+
+            // Fire-and-forget analytics
+            logActivity("USER_LOGGED_IN", user._id, { method: "google" }, req);
+            
+            LoginHistory.create({
+                user: user._id,
+                success: true,
+                ipAddress: req.ip || req.connection.remoteAddress || "",
+                userAgent: req.headers["user-agent"] || "",
+            }).catch(() => {});
+            
+            // Update user stats
+            user.lastLoginAt = new Date();
+            user.loginCount = (user.loginCount || 0) + 1;
+            user.lastActivityAt = new Date();
+            user.save().catch(() => {});
 
             res.status(200).json({
                 success: true,
@@ -234,7 +280,7 @@ const updateUser = (req, res) => {
 
     User.findByIdAndUpdate(
         id,
-        { firstName, lastName, email, username },
+        { firstName, lastName, email, username }, // explicitly omit role
         { returnDocument: 'after' }
     )
         .select("-password")

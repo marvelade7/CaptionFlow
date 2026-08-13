@@ -55,9 +55,28 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+        // ── Analytics fields ─────────────────────────────────────────
+        lastLoginAt: {
+            type: Date,
+            default: null,
+        },
+        loginCount: {
+            type: Number,
+            default: 0,
+        },
+        lastActivityAt: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true },
 );
+
+// ── Indexes ──────────────────────────────────────────────────────────────────
+userSchema.index({ createdAt: -1 });
+userSchema.index({ lastLoginAt: -1 });
+userSchema.index({ lastActivityAt: -1 });
+userSchema.index({ role: 1, createdAt: -1 });
 
 const User = mongoose.model("User", userSchema);
 
