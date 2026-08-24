@@ -9,7 +9,7 @@ const {
     signInWithGoogle,
 } = require("../controllers/user.controller");
 const protect = require("../middleware/auth.middleware");
-const upload = require("../middleware/upload.middleware");
+const { profileUpload } = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
@@ -25,6 +25,6 @@ router.get("/me", protect, (req, res) => {
 });
 router.get("/users/:id", protect, getUserById);
 router.patch("/users/:id", protect, updateUser);
-router.patch("/users/:id/profile-picture", protect, upload.single("profilePicture"), updateProfilePicture);
+router.patch("/users/:id/profile-picture", protect, profileUpload.single("profilePicture"), updateProfilePicture);
 
 module.exports = router;

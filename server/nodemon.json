@@ -1,0 +1,4 @@
+{
+  "ignore": ["bin/", "test-*.js"],
+  "ext": "js,mjs,cjs,json"
+}

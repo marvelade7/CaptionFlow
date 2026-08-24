@@ -4,10 +4,26 @@ const Transcription = require("../models/transcription.model");
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegStatic = require("ffmpeg-static");
 const path = require("path");
+const { execSync } = require("child_process");
 const { logActivity } = require("./activity.service");
 
-// Configure ffmpeg to use the static binary
-ffmpeg.setFfmpegPath(ffmpegStatic);
+// Prefer the system ffmpeg if available — the static binary (johnvansickle)
+// is known to SIGSEGV on some Linux systems for certain video files.
+function resolveFfmpegPath() {
+    try {
+        const sysBin = execSync("which ffmpeg", { stdio: ["pipe", "pipe", "ignore"] })
+            .toString()
+            .trim();
+        if (sysBin) {
+            console.log(`[FFmpeg] Using system binary: ${sysBin}`);
+            return sysBin;
+        }
+    } catch (_) { /* not installed */ }
+    console.log(`[FFmpeg] System ffmpeg not found, falling back to ffmpeg-static`);
+    return ffmpegStatic;
+}
+
+ffmpeg.setFfmpegPath(resolveFfmpegPath());
 
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
@@ -41,70 +57,87 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
 
         // 1. Update status to processing
         await Transcription.findByIdAndUpdate(transcriptionId, { status: "processing", startedAt: new Date() });
-        
+
         // Find user for analytics
         const doc = await Transcription.findById(transcriptionId);
         const userId = doc ? doc.userId : null;
-        if (userId) logActivity("TRANSCRIPTION_STARTED", userId, { transcriptionId }).catch(() => {});
+        if (userId) logActivity("TRANSCRIPTION_STARTED", userId, { transcriptionId }).catch(() => { });
 
-        // 2. Chunk the file — strategy depends on the input format
+        // 2. Chunk the file — strategy depends on the input format + file size
         const CHUNK_DURATION_S = 300; // 5-minute segments
-        const ext = path.extname(filePath).toLowerCase();
+        const GROQ_DIRECT_LIMIT = 25 * 1024 * 1024; // 25 MB — Groq's upload cap
+        const isUrl = filePath.startsWith("http://") || filePath.startsWith("https://");
+        const ext = isUrl ? path.extname(new URL(filePath).pathname).toLowerCase() : path.extname(filePath).toLowerCase();
         const isAudioOnly = COPY_SAFE_EXTS.has(ext);
-        const chunkPattern = `${filePath}_chunk_%03d.mp3`;
+        const baseName = isUrl ? path.parse(new URL(filePath).pathname).name : path.parse(filePath).name;
+        const chunkPrefix = path.join(require("os").tmpdir(), `${baseName}_${transcriptionId}_chunk_`);
+        const chunkPattern = `${chunkPrefix}%03d.mp3`;
 
-        console.log(`[Transcription] Input: ${ext}, strategy: ${isAudioOnly ? "stream copy (no re-encode)" : "transcode (video → audio)"}`);
-        const ffmpegStart = Date.now();
+        // ── Fast path: file fits within Groq's 25MB direct upload limit.
+        // Skip ffmpeg entirely — this avoids the SIGSEGV crash from ffmpeg-static
+        // on modern Linux (glibc 2.43+) when processing video files.
+        const fileSize = isUrl ? 0 : fs.statSync(filePath).size;
+        const useDirectUpload = !isUrl && fileSize < GROQ_DIRECT_LIMIT;
 
-        await new Promise((resolve, reject) => {
-            const cmd = ffmpeg(filePath);
+        if (useDirectUpload) {
+            console.log(`[Transcription] File is ${(fileSize / 1024 / 1024).toFixed(1)} MB — sending directly to Groq (no ffmpeg)`);
+            chunks = [filePath]; // treat the original file as the single "chunk"
+        } else {
+            console.log(`[Transcription] Input: ${ext}, strategy: ${isAudioOnly ? "stream copy (no re-encode)" : "transcode (video → audio)"}`);
+            const ffmpegStart = Date.now();
 
-            if (isAudioOnly) {
-                // ── Fast path: copy the audio bitstream directly, no decoding/re-encoding.
-                // This is nearly instantaneous (~1-3s) regardless of file size.
+            await new Promise((resolve, reject) => {
+                const cmd = ffmpeg(filePath);
+
+                if (isAudioOnly) {
+                    // ── Fast path: copy the audio bitstream directly, no decoding/re-encoding.
+                    cmd
+                        .outputOptions([
+                            "-c copy",
+                            "-f segment",
+                            `-segment_time ${CHUNK_DURATION_S}`,
+                            "-map 0:a:0",
+                            "-reset_timestamps 1",
+                        ])
+                        .output(chunkPattern);
+                } else {
+                    // ── Slow path: video file — extract + transcode audio to MP3.
+                    cmd
+                        .noVideo()
+                        .audioCodec("libmp3lame")
+                        .audioBitrate("128k")
+                        .audioChannels(1)
+                        .outputOptions([
+                            "-f segment",
+                            `-segment_time ${CHUNK_DURATION_S}`,
+                            "-compression_level 0",
+                        ])
+                        .output(chunkPattern);
+                }
+
                 cmd
-                    .outputOptions([
-                        "-c copy",               // copy stream, no re-encode
-                        "-f segment",
-                        `-segment_time ${CHUNK_DURATION_S}`,
-                        "-map 0:a:0",            // ensure only audio track
-                        "-reset_timestamps 1",
-                    ])
-                    .output(chunkPattern);
-            } else {
-                // ── Slow path: video file — extract + transcode audio to MP3.
-                // Use fastest settings: 128kbps, mono, compression_level 0.
-                cmd
-                    .noVideo()
-                    .audioCodec("libmp3lame")
-                    .audioBitrate("128k")
-                    .audioChannels(1)
-                    .outputOptions([
-                        "-f segment",
-                        `-segment_time ${CHUNK_DURATION_S}`,
-                        "-compression_level 0",
-                    ])
-                    .output(chunkPattern);
+                    .on("end", resolve)
+                    .on("error", (err, stdout, stderr) => {
+                        console.error("[FFmpeg stderr]:", stderr);
+                        reject(new Error(`FFmpeg failed: ${err.message}${stderr ? " | " + stderr.slice(-500) : ""}`));
+                    })
+                    .run();
+            });
+
+            console.log(`[Transcription] FFmpeg chunking: ${Math.round((Date.now() - ffmpegStart) / 1000)}s`);
+
+            // Gather generated chunk filenames
+            let chunkIndex = 0;
+            while (fs.existsSync(`${chunkPrefix}${String(chunkIndex).padStart(3, "0")}.mp3`)) {
+                chunks.push(`${chunkPrefix}${String(chunkIndex).padStart(3, "0")}.mp3`);
+                chunkIndex++;
             }
 
-            cmd
-                .on("end", resolve)
-                .on("error", reject)
-                .run();
-        });
-
-        console.log(`[Transcription] FFmpeg chunking: ${Math.round((Date.now() - ffmpegStart) / 1000)}s`);
-
-        // Gather generated chunk filenames
-        let chunkIndex = 0;
-        while (fs.existsSync(`${filePath}_chunk_${String(chunkIndex).padStart(3, "0")}.mp3`)) {
-            chunks.push(`${filePath}_chunk_${String(chunkIndex).padStart(3, "0")}.mp3`);
-            chunkIndex++;
+            if (chunks.length === 0) {
+                throw new Error("FFmpeg failed to generate audio chunks.");
+            }
         }
 
-        if (chunks.length === 0) {
-            throw new Error("FFmpeg failed to generate audio chunks.");
-        }
         console.log(`[Transcription] ${chunks.length} chunks ready, sending to Groq in parallel…`);
 
         // 3. Process all chunks IN PARALLEL with a hard timeout.
@@ -178,9 +211,9 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
             successfulChunks: chunks.length,
             failedChunks: 0,
         });
-        
+
         if (updatedDoc && updatedDoc.userId) {
-            logActivity("TRANSCRIPTION_COMPLETED", updatedDoc.userId, { transcriptionId, processingTime }).catch(() => {});
+            logActivity("TRANSCRIPTION_COMPLETED", updatedDoc.userId, { transcriptionId, processingTime }).catch(() => { });
         }
 
     } catch (error) {
@@ -191,11 +224,12 @@ const transcribeAudioJob = async (filePath, transcriptionId) => {
             failedAt: new Date(),
         });
         if (updatedDoc && updatedDoc.userId) {
-            logActivity("TRANSCRIPTION_FAILED", updatedDoc.userId, { transcriptionId, error: error.message }).catch(() => {});
+            logActivity("TRANSCRIPTION_FAILED", updatedDoc.userId, { transcriptionId, error: error.message }).catch(() => { });
         }
     } finally {
         // 5. Always clean up all temp files
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        const isUrl = filePath.startsWith("http://") || filePath.startsWith("https://");
+        if (!isUrl && fs.existsSync(filePath)) fs.unlinkSync(filePath);
         chunks.forEach(chunkPath => {
             if (fs.existsSync(chunkPath)) fs.unlinkSync(chunkPath);
         });

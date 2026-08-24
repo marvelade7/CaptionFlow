@@ -1,5 +1,5 @@
 const express = require("express");
-const upload = require("../middleware/upload.middleware");
+const { transcriptionUpload } = require("../middleware/upload.middleware");
 const protect = require("../middleware/auth.middleware");
 const {
     uploadFile,
@@ -11,7 +11,7 @@ const {
 
 const router = express.Router();
 
-router.post("/upload", protect, upload.single("file"), uploadFile);
+router.post("/upload", protect, transcriptionUpload.single("file"), uploadFile);
 router.get("/", protect, getUserTranscriptions);
 router.get("/:id", protect, getTranscriptionById);
 router.patch("/:id/status", protect, updateTranscriptionStatus);

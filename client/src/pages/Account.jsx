@@ -11,8 +11,8 @@ function Avatar({ user, onUpload, uploading }) {
     const avatarSrc = user?.profilePicture
         ? user.profilePicture
         : `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
-              user?.firstName + " " + user?.lastName
-          )}`;
+                user?.firstName + " " + user?.lastName
+            )}`;
 
     return (
         <div className="relative h-20 w-20 shrink-0">

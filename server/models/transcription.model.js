@@ -105,6 +105,8 @@ const transcriptionSchema = new Schema({
 transcriptionSchema.index({ userId: 1, createdAt: -1 });
 transcriptionSchema.index({ status: 1, createdAt: -1 });
 transcriptionSchema.index({ createdAt: -1 });
-transcriptionSchema.index({ expiresAt: 1 });
+// TTL index — MongoDB auto-deletes the document when expiresAt is reached.
+// expireAfterSeconds: 0 means "delete exactly at the expiresAt timestamp".
+transcriptionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Transcription", transcriptionSchema);

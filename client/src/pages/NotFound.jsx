@@ -12,5 +12,7 @@ export default function NotFound() {
         Back to Dashboard
       </Link>
     </div>
+
+    
   )
 }

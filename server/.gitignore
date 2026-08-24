@@ -1,3 +1,14 @@
 node_modules
 .env
 docs
+
+# Downloaded ffmpeg binaries
+bin/
+
+# Local upload temp files
+uploads/
+
+# Scratch / test scripts
+test-*.js
+test.txt
+testSummary.js

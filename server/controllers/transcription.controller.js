@@ -13,8 +13,10 @@ const uploadFile = (req, res) => {
             .json({ success: false, message: "No file uploaded" });
     }
 
+    const size = file.size || file.bytes || 0;
+
     const MAX_SIZE = 300 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
+    if (size > MAX_SIZE) {
         return res
             .status(400)
             .json({ success: false, message: "File size exceeds 300MB limit" });
@@ -45,7 +47,8 @@ const uploadFile = (req, res) => {
     const transcription = new Transcription({
         userId: req.user.id,
         originalFileName: file.originalname,
-        fileSize: file.size,
+        cloudinaryUrl: "",   // file is stored locally for processing; not uploaded to Cloudinary
+        fileSize: size,
         language: req.body.language || "en",
         status: "uploaded",
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -60,7 +63,7 @@ const uploadFile = (req, res) => {
             
             // Log upload activity
             logActivity("FILE_UPLOADED", req.user.id, {
-                fileSize: file.size,
+                fileSize: size,
                 fileType: fileExtension,
             }, req);
 
@@ -72,8 +75,6 @@ const uploadFile = (req, res) => {
         })
         .catch((error) => {
             console.error("=== DB Save Error ===", error.message);
-            // Clean up temp file if DB save fails
-            if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
             res.status(500).json({
                 success: false,
                 message: `Failed to save transcription record: ${error.message}`,
