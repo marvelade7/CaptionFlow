@@ -11,7 +11,9 @@ const api = axios.create({
 
 // Attach the stored JWT on every request
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("captionFlowToken");
+    const token =
+        localStorage.getItem("captionFlowToken") ||
+        sessionStorage.getItem("captionFlowToken");
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }

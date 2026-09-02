@@ -10,7 +10,7 @@ const uploadFile = (req, res) => {
     if (!file) {
         return res
             .status(400)
-            .json({ success: false, message: "No file uploaded" });
+            .json({ success: false, message: "Please select a file to upload." });
     }
 
     const size = file.size || file.bytes || 0;
@@ -77,7 +77,7 @@ const uploadFile = (req, res) => {
             console.error("=== DB Save Error ===", error.message);
             res.status(500).json({
                 success: false,
-                message: `Failed to save transcription record: ${error.message}`,
+                message: "Failed to start transcription. Please try again.",
             });
         });
 };

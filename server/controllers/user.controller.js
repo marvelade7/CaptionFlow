@@ -55,9 +55,10 @@ const createUser = (req, res) => {
             });
         })
         .catch((err) => {
+            console.error("createUser error:", err.message);
             res.status(500).json({
                 success: false,
-                message: err.message,
+                message: "Something went wrong. Please try again.",
             });
         });
 };
@@ -138,9 +139,10 @@ const signInUser = (req, res) => {
             });
         })
         .catch((err) => {
+            console.error("signInUser error:", err.message);
             res.status(500).json({
                 success: false,
-                message: err.message,
+                message: "Something went wrong. Please try again.",
             });
         });
 };
@@ -232,9 +234,10 @@ const getAllUsers = (req, res) => {
             });
         })
         .catch((err) => {
+            console.error("getAllUsers error:", err.message);
             res.status(500).json({
                 success: false,
-                message: err.message,
+                message: "Something went wrong. Please try again.",
             });
         });
 };
@@ -258,9 +261,10 @@ const getUserById = (req, res) => {
             });
         })
         .catch((err) => {
+            console.error("getUserById error:", err.message);
             res.status(500).json({
                 success: false,
-                message: err.message,
+                message: "Something went wrong. Please try again.",
             });
         });
 };
@@ -313,9 +317,10 @@ const updateUser = (req, res) => {
                     message,
                 });
             }
+            console.error("updateUser error:", err.message);
             res.status(500).json({
                 success: false,
-                message: err.message,
+                message: "Something went wrong. Please try again.",
             });
         });
 };
@@ -387,7 +392,7 @@ const updateProfilePicture = (req, res) => {
             if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
             res.status(err.status || 500).json({
                 success: false,
-                message: err.message,
+                message: err.status ? err.message : "Failed to update profile picture. Please try again.",
             });
         });
 };

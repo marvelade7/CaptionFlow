@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AudioLines, Eye, EyeOff, Check } from "lucide-react";
+import { AudioLines, Eye, EyeOff, Check, PartyPopper } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import toast from "react-hot-toast";
@@ -36,6 +36,7 @@ function GoogleIcon() {
 export default function SignupPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [googleSubmitting, setGoogleSubmitting] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
@@ -51,18 +52,15 @@ export default function SignupPage() {
         onSubmit: (values, { setSubmitting, resetForm }) => {
             setSubmitting(true);
             api.post("/auth/register", values)
-                .then((res) => {
-                    toast.success(
-                        res.data.message || "Account created! Please log in to continue.",
-                    );
+                .then(() => {
                     resetForm();
-                    navigate("/login", { state: location.state });
+                    setShowSuccessModal(true);
                 })
                 .catch((err) => {
                     console.log(err.response);
                     console.log(err.response?.data);
                     toast.error(
-                        err.response?.data?.message || "Registration failed",
+                        err.response?.data?.message || "Registration failed. Please try again.",
                     );
                 })
                 .finally(() => {
@@ -95,6 +93,44 @@ export default function SignupPage() {
     };
 
     return (
+        <>
+        {/* ── Success Modal ── */}
+        {showSuccessModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <div
+                    className="bg-white rounded-2xl shadow-2xl p-8 mx-4 w-full max-w-sm text-center"
+                    style={{ animation: "modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both" }}
+                >
+                    {/* Icon */}
+                    <div className="mx-auto mb-5 w-16 h-16 rounded-full bg-[#7C3AED]/10 flex items-center justify-center">
+                        <PartyPopper size={32} className="text-[#7C3AED]" />
+                    </div>
+
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                        Account created! 🎉
+                    </h2>
+                    <p className="text-sm text-gray-500 mb-7 leading-relaxed">
+                        Welcome to CaptionFlow. Your account is ready — sign in to start transcribing.
+                    </p>
+
+                    <button
+                        onClick={() => navigate("/login", { state: location.state })}
+                        className="w-full cursor-pointer bg-[#7C3AED] text-white font-semibold text-sm py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                        Sign In
+                    </button>
+                </div>
+
+                {/* keyframe injected inline */}
+                <style>{`
+                    @keyframes modalPop {
+                        from { opacity: 0; transform: scale(0.85); }
+                        to   { opacity: 1; transform: scale(1); }
+                    }
+                `}</style>
+            </div>
+        )}
+
         <div className="w-full min-h-screen bg-[#FAF8FF] overflow-y-auto grid grid-cols-1 lg:grid-cols-2">
             {/* Left panel — form */}
             <div className="p-6 sm:p-8 bg-white shadow-sm border border-purple-200 rounded-2xl flex flex-col justify-center mx-auto w-[92%] max-w-md my-8 lg:my-auto" data-aos="fade-up">
@@ -350,5 +386,6 @@ export default function SignupPage() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

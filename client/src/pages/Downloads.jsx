@@ -29,6 +29,7 @@ function buildAITextContent(aiResult) {
 export default function Downloads() {
     const [transcriptions, setTranscriptions] = useState([]);
     const [loading, setLoading]               = useState(true);
+    const [fetchError, setFetchError]         = useState("");
     const [activeModal, setActiveModal]       = useState(null); // job object or null
 
     useEffect(() => {
@@ -38,7 +39,11 @@ export default function Downloads() {
                     setTranscriptions(res.data.data.filter(t => t.status === "completed"));
                 }
             })
-            .catch((err) => console.error("Failed to load transcriptions:", err))
+            .catch((err) => {
+                const msg = err.response?.data?.message || "Failed to load your downloads. Please refresh and try again.";
+                setFetchError(msg);
+                toast.error(msg);
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -77,6 +82,8 @@ export default function Downloads() {
                 <div className="mt-5 flex flex-col divide-y divide-[#ecebf3]">
                     {loading ? (
                         <div className="py-8 text-center text-sm text-[#a8a3bd]">Loading downloads…</div>
+                    ) : fetchError ? (
+                        <div className="py-8 text-center text-sm text-red-400">{fetchError}</div>
                     ) : transcriptions.length === 0 ? (
                         <div className="py-8 text-center text-sm text-[#a8a3bd]">
                             No completed transcriptions available to download yet.

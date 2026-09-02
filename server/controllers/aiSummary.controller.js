@@ -9,15 +9,15 @@ function generateSummary(req, res) {
     Transcription.findById(jobId)
         .then((job) => {
             if (!job) {
-                res.status(404).json({ message: 'Job not found' });
+                res.status(404).json({ success: false, message: 'Transcription not found.' });
                 return null;
             }
             if (job.userId.toString() !== req.user.id.toString()) {
-                res.status(403).json({ message: 'Not authorized for this job' });
+                res.status(403).json({ success: false, message: 'You are not authorized to access this transcription.' });
                 return null;
             }
             if (!job.transcript) {
-                res.status(400).json({ message: 'Job has no transcript to summarize yet' });
+                res.status(400).json({ success: false, message: 'This transcription has no text to summarize yet.' });
                 return null;
             }
 
@@ -44,14 +44,14 @@ function generateSummary(req, res) {
                     job.aiProcessingStatus = 'failed';
                     return job.save().then(() => {
                         console.error('AI summary generation failed:', err.message);
-                        res.status(500).json({ message: 'Failed to generate summary and excerpts' });
+                        res.status(500).json({ success: false, message: 'Failed to generate AI summary. Please try again.' });
                     });
                 });
         })
         .catch((err) => {
             console.error('generateSummary error:', err.message);
             if (!res.headersSent) {
-                res.status(500).json({ message: 'Server error' });
+                res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
             }
         });
 }
@@ -61,12 +61,12 @@ function downloadSummary(req, res) {
 
     Transcription.findById(jobId)
         .then((job) => {
-            if (!job) return res.status(404).json({ message: 'Job not found' });
+            if (!job) return res.status(404).json({ success: false, message: 'Transcription not found.' });
             if (job.userId.toString() !== req.user.id) {
-                return res.status(403).json({ message: 'Not authorized' });
+                return res.status(403).json({ success: false, message: 'You are not authorized to access this transcription.' });
             }
             if (!job.summary?.text) {
-                return res.status(400).json({ message: 'No summary generated yet' });
+                return res.status(400).json({ success: false, message: 'No AI summary has been generated yet.' });
             }
 
             res.setHeader('Content-Type', 'text/plain');
@@ -85,7 +85,7 @@ function downloadSummary(req, res) {
         })
         .catch((err) => {
             console.error('downloadSummary error:', err.message);
-            res.status(500).json({ message: 'Server error' });
+            res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
         });
 }
 
@@ -94,12 +94,12 @@ function downloadExcerpts(req, res) {
 
     Transcription.findById(jobId)
         .then((job) => {
-            if (!job) return res.status(404).json({ message: 'Job not found' });
+            if (!job) return res.status(404).json({ success: false, message: 'Transcription not found.' });
             if (job.userId.toString() !== req.user.id) {
-                return res.status(403).json({ message: 'Not authorized' });
+                return res.status(403).json({ success: false, message: 'You are not authorized to access this transcription.' });
             }
             if (!job.excerpts?.items?.length) {
-                return res.status(400).json({ message: 'No excerpts generated yet' });
+                return res.status(400).json({ success: false, message: 'No AI key excerpts have been generated yet.' });
             }
 
             const formatted = job.excerpts.items
@@ -122,7 +122,7 @@ function downloadExcerpts(req, res) {
         })
         .catch((err) => {
             console.error('downloadExcerpts error:', err.message);
-            res.status(500).json({ message: 'Server error' });
+            res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
         });
 }
 
