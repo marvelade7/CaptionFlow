@@ -64,7 +64,7 @@ const createUser = (req, res) => {
 
 // Sign in a user
 const signInUser = (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({
@@ -107,7 +107,7 @@ const signInUser = (req, res) => {
                 { id: user._id },
                 process.env.JWT_SECRET,
                 {
-                    expiresIn: "3h",
+                    expiresIn: rememberMe ? "30d" : "3h",
                 }
             );
 
@@ -185,7 +185,7 @@ const signInWithGoogle = (req, res) => {
             const token = jwt.sign(
                 { id: user._id },
                 process.env.JWT_SECRET,
-                { expiresIn: "3h" }
+                { expiresIn: "30d" }
             );
 
             const userData = user.toObject();

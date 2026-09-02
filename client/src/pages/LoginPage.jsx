@@ -36,6 +36,7 @@ export default function LoginPage() {
     const [submitting, setSubmitting] = useState(false);
     const [googleSubmitting, setGoogleSubmitting] = useState(false);
     const [errMessage, setErrMessage] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
@@ -61,7 +62,7 @@ export default function LoginPage() {
                 return api.post("/auth/google", { idToken });
             })
             .then((res) => {
-                login(res.data.user, res.data.token);
+                login(res.data.user, res.data.token, true);
                 toast.success("Login successful!");
                 navigate(pendingFile ? "/dashboard/upload" : "/dashboard", {
                     state: pendingFile ? { pendingFile } : undefined,
@@ -82,9 +83,9 @@ export default function LoginPage() {
 
         setSubmitting(true);
         setErrMessage("");
-        api.post("/auth/login", { email, password })
+        api.post("/auth/login", { email, password, rememberMe })
             .then((res) => {
-                login(res.data.user, res.data.token);
+                login(res.data.user, res.data.token, rememberMe);
                 toast.success("Login successful!");
                 if (pendingFile) {
                     navigate("/dashboard/upload", {
@@ -181,6 +182,8 @@ export default function LoginPage() {
                         <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
                             <input
                                 type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
                                 className="w-4 h-4 rounded border-gray-300 text-[#7C3AED] focus:ring-[#7C3AED]/40"
                             />
                             Remember me

@@ -5,23 +5,29 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const [captionFlowUser, setUser] = useState(null);
     const [captionFlowToken, setToken] = useState(
-        localStorage.getItem("captionFlowToken") || null,
+        localStorage.getItem("captionFlowToken") ||
+        sessionStorage.getItem("captionFlowToken") ||
+        null,
     );
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("captionFlowUser");
+        const storedUser =
+            localStorage.getItem("captionFlowUser") ||
+            sessionStorage.getItem("captionFlowUser");
 
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
     }, []);
 
-    const login = (userData, jwt) => {
+    const login = (userData, jwt, rememberMe = false) => {
+        const storage = rememberMe ? localStorage : sessionStorage;
+
         setUser(userData);
         setToken(jwt);
 
-        localStorage.setItem("captionFlowUser", JSON.stringify(userData));
-        localStorage.setItem("captionFlowToken", jwt);
+        storage.setItem("captionFlowUser", JSON.stringify(userData));
+        storage.setItem("captionFlowToken", jwt);
     };
 
     const logout = () => {
@@ -30,6 +36,8 @@ export function AuthProvider({ children }) {
 
         localStorage.removeItem("captionFlowUser");
         localStorage.removeItem("captionFlowToken");
+        sessionStorage.removeItem("captionFlowUser");
+        sessionStorage.removeItem("captionFlowToken");
     };
 
     useEffect(() => {
