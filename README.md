@@ -2,19 +2,24 @@
 
 **Premium AI-powered transcription for audio and video.**
 
-CaptionFlow turns raw media into clean, timestamped transcripts — upload a file, and get back searchable text and export-ready caption formats in minutes. Built as a full-stack SaaS product with a polished dashboard experience on the front end and an async processing pipeline on the back end.
+CaptionFlow turns raw media into clean, timestamped transcripts — upload a file, and get back searchable text, export-ready caption formats, and AI-generated summaries in minutes. Built as a full-stack SaaS product with a polished dashboard, role-based admin panel, visitor analytics, and an async processing pipeline.
 
 ---
 
 ## ✨ Features
 
-- 🔐 **Secure authentication** — JWT-based signup/login with protected dashboard routes
-- 📁 **Drag-and-drop upload** — client-side file validation and real-time upload progress
-- ⚙️ **Async transcription pipeline** — large files are chunked with `ffmpeg` and processed in the background, so uploads never block on processing
+- 🔐 **Secure authentication** — JWT-based signup/login, Google Sign-In via Firebase, and "Remember Me" session persistence
+- 📁 **Drag-and-drop upload** — client-side validation, real-time upload progress, and Cloudinary media storage
+- ⚙️ **Async transcription pipeline** — files are chunked with `ffmpeg` and processed in the background
 - 🗣️ **Powered by Groq Whisper** — fast, accurate speech-to-text with timestamped segments
-- 📤 **Multi-format export** — download transcripts as `.txt`, `.srt`, or `.ass`
-- 📊 **Live status polling** — track a transcription job from *queued* to *complete* right in the UI
-- 🎨 **Custom design system** — hand-tuned Tailwind v4 styling, no boilerplate defaults
+- 🤖 **AI Summaries & Excerpts** — Google Gemini generates summaries and key excerpts from completed transcripts
+- 📤 **Multi-format export** — download transcripts as `.txt`, `.srt`, or `.ass`; export AI summaries as PDF
+- 📊 **Live status polling** — track a transcription job from *queued* → *processing* → *complete* in the UI
+- 👤 **Account management** — update profile, change avatar (Cloudinary), manage settings
+- 🛡️ **Admin dashboard** — role-gated panel with user management, transcription oversight, activity logs, error logs, visitor analytics, and audit trails
+- 📈 **Visitor analytics** — anonymous session tracking with geo-IP, device/browser detection via `ua-parser-js` and `geoip-lite`
+- 📱 **PWA-ready** — installable progressive web app with `vite-plugin-pwa`
+- 🚦 **Rate limiting** — `express-rate-limit` protection on admin endpoints
 
 ---
 
@@ -22,52 +27,53 @@ CaptionFlow turns raw media into clean, timestamped transcripts — upload a fil
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React (Vite), React Router v6, Tailwind CSS v4, lucide-react |
-| **Backend** | Node.js, Express |
-| **Database** | MongoDB |
-| **Transcription** | Groq Whisper API |
-| **Media processing** | ffmpeg |
-| **Auth** | JWT |
-
-**Design tokens** (used as Tailwind arbitrary values, no config file):
-
-| Role | Hex |
-|---|---|
-| Primary | `#7C3AED` |
-| Secondary | `#6366F1` |
-| Success | `#10B981` |
-| Warning | `#F59E0B` |
-| Danger | `#EF4444` |
+| **Frontend** | React 19, Vite 8, React Router v7, Tailwind CSS v4 |
+| **UI / Charts** | lucide-react, recharts, bootstrap-icons, AOS |
+| **Forms** | Formik + Yup |
+| **HTTP** | Axios |
+| **PDF** | jsPDF |
+| **Notifications** | react-hot-toast |
+| **Backend** | Node.js, Express 5 |
+| **Database** | MongoDB (Mongoose 9) |
+| **Auth** | JWT (`jsonwebtoken`), bcrypt, Firebase Admin SDK |
+| **Google Sign-In** | Firebase client SDK |
+| **Transcription** | Groq SDK (Whisper) |
+| **AI Summaries** | Google Gemini (`@google/genai`) |
+| **Media processing** | ffmpeg (via `ffmpeg-static`, `fluent-ffmpeg`) |
+| **File storage** | Cloudinary (`multer-storage-cloudinary`) |
+| **Analytics** | `geoip-lite`, `ua-parser-js` |
+| **Deployment** | Vercel (client), Render (server), MongoDB Atlas |
 
 ---
 
 ## 🗺️ How It Works
 
 ```
- ┌────────────┐     ┌──────────────┐     ┌────────────────┐     ┌───────────────┐
- │   Upload    │ ──▶ │  Validate &   │ ──▶ │  Chunk with     │ ──▶ │  Transcribe     │
- │   (client)  │     │  create job   │     │  ffmpeg         │     │  via Groq Whisper│
- └────────────┘     └──────────────┘     └────────────────┘     └───────────────┘
+┌────────────┐     ┌──────────────┐     ┌────────────────┐     ┌───────────────────┐
+│   Upload    │ ──▶ │  Validate &   │ ──▶ │  Chunk with     │ ──▶ │  Transcribe via    │
+│   (client)  │     │  create job   │     │  ffmpeg         │     │  Groq Whisper      │
+└────────────┘     └──────────────┘     └────────────────┘     └───────────────────┘
                                                                           │
                                                                           ▼
-                                                              ┌───────────────────┐
-                                                              │  Save transcript,   │
-                                                              │  timestamps, status │
-                                                              └───────────────────┘
+                                                              ┌───────────────────────┐
+                                                              │  Save transcript,       │
+                                                              │  timestamps, status     │
+                                                              └───────────────────────┘
                                                                           │
-                                                                          ▼
-                                                              ┌───────────────────┐
-                                                              │  Poll & download    │
-                                                              │  (TXT / SRT / ASS)  │
-                                                              └───────────────────┘
+                                                     ┌────────────────────┴───────────────────┐
+                                                     ▼                                        ▼
+                                         ┌─────────────────────┐              ┌───────────────────────┐
+                                         │  Poll & download     │              │  Generate AI summary   │
+                                         │  (TXT / SRT / ASS)  │              │  & excerpts via Gemini │
+                                         └─────────────────────┘              └───────────────────────┘
 ```
 
 1. A user uploads a media file through the dashboard.
-2. The file is validated and a transcription record is created in MongoDB.
-3. A background job splits the media into chunks using `ffmpeg`, avoiding upload size limits.
-4. Each chunk is sent to Groq Whisper for transcription.
-5. The transcript, timestamped segments, and job status are saved back to the database.
-6. The client polls the job and, once complete, offers copy/download in multiple formats.
+2. The server validates, stores the file on Cloudinary, and creates a transcription record in MongoDB.
+3. A background job splits the media using `ffmpeg`, then sends chunks to Groq Whisper.
+4. The transcript, timestamped segments, and job status are saved back to MongoDB.
+5. The client polls the job until complete and offers copy/download in multiple formats.
+6. Optionally, the user triggers Gemini to generate an AI summary and excerpts, downloadable as a PDF.
 
 ---
 
@@ -75,20 +81,76 @@ CaptionFlow turns raw media into clean, timestamped transcripts — upload a fil
 
 ```
 CaptionFlow/
-├── client/                      # Vite + React frontend
+├── client/                          # Vite + React frontend
 │   └── src/
-│       ├── components/          # Sidebar, DashboardLayout, ProtectedRoute, GuestRoute, etc.
-│       ├── context/              # AuthContext (auth state)
-│       ├── pages/                 # Login, Sign Up, Upload, Dashboard views
-│       └── services/               # api.js — client-side API layer
+│       ├── components/              # Shared UI components
+│       │   ├── DashboardLayout.jsx  # Main shell with Sidebar + Topbar
+│       │   ├── Sidebar.jsx
+│       │   ├── AIModal.jsx          # AI summary viewer/downloader
+│       │   ├── AdminRoute.jsx       # Admin role guard
+│       │   ├── ProtectedRoute.jsx   # Auth guard
+│       │   ├── GuestRoute.jsx       # Redirects logged-in users
+│       │   ├── PWAToast.jsx         # PWA install prompt
+│       │   ├── RecentJobsTable.jsx
+│       │   ├── VelocityChart.jsx    # recharts dashboard chart
+│       │   └── ...
+│       ├── context/
+│       │   └── AuthContext.jsx      # Global auth state (JWT + Google)
+│       ├── hooks/                   # Custom React hooks
+│       ├── pages/
+│       │   ├── LandingPage.jsx
+│       │   ├── LoginPage.jsx
+│       │   ├── SignUpPage.jsx
+│       │   ├── Dashboard.jsx        # User overview
+│       │   ├── Upload.jsx           # Upload + transcription result + AI summary
+│       │   ├── Downloads.jsx        # Download history
+│       │   ├── MyFiles.jsx
+│       │   ├── Account.jsx          # Profile management
+│       │   ├── Settings.jsx
+│       │   └── admin/               # Admin-only pages (lazy-loaded)
+│       │       ├── AdminDashboard.jsx
+│       │       ├── AdminAnalytics.jsx
+│       │       ├── AdminUsers.jsx
+│       │       ├── AdminUserDetail.jsx
+│       │       ├── AdminTranscriptions.jsx
+│       │       ├── AdminActivity.jsx
+│       │       └── AdminErrors.jsx
+│       ├── services/                # Axios API layer
+│       ├── utils/
+│       └── validations/             # Yup schemas
 │
-└── server/                       # Express backend
-    ├── controllers/                # transcription.controller.js, user.controller.js
-    ├── middleware/                  # auth.middleware.js
-    ├── models/                       # transcription.model.js
-    ├── routes/                        # auth.routes.js, transcription.routes.js
-    ├── services/                       # transcription.service.js (ffmpeg + Groq Whisper)
-    └── index.js                         # App entry — Express setup, MongoDB connection
+└── server/                          # Express backend
+    ├── controllers/
+    │   ├── user.controller.js       # Auth, profile, Google sign-in
+    │   ├── transcription.controller.js
+    │   ├── aiSummary.controller.js  # Gemini summary generation
+    │   └── admin.controller.js      # Admin analytics & management
+    ├── middleware/
+    │   ├── auth.middleware.js       # JWT verification
+    │   ├── admin.middleware.js      # Admin role check
+    │   └── upload.middleware.js     # Multer + Cloudinary
+    ├── models/
+    │   ├── user.model.js
+    │   ├── transcription.model.js
+    │   ├── activityLog.model.js
+    │   ├── adminAuditLog.model.js
+    │   ├── downloadHistory.model.js
+    │   ├── errorLog.model.js
+    │   ├── loginHistory.model.js
+    │   └── visitorSession.model.js
+    ├── routes/
+    │   ├── auth.routes.js
+    │   ├── transcription.routes.js
+    │   ├── aiSummary.route.js
+    │   ├── admin.routes.js
+    │   └── analytics.routes.js
+    ├── services/
+    │   ├── transcription.service.js # ffmpeg + Groq Whisper pipeline
+    │   ├── aiSummary.js             # Gemini integration
+    │   ├── analytics.service.js     # MongoDB aggregation pipelines
+    │   ├── activity.service.js
+    │   └── visitor.service.js       # Geo-IP + UA session tracking
+    └── index.js                     # App entry — Express setup, MongoDB
 ```
 
 ---
@@ -97,10 +159,13 @@ CaptionFlow/
 
 ### Prerequisites
 
-- Node.js ≥ 16, npm
-- MongoDB instance (local or hosted, e.g. Atlas)
-- Groq API key (for Whisper transcription)
-- `ffmpeg` installed and available on your `PATH`
+- Node.js ≥ 18, npm
+- MongoDB instance (local or Atlas)
+- Groq API key — [console.groq.com](https://console.groq.com)
+- Google Gemini API key — [aistudio.google.com](https://aistudio.google.com)
+- Cloudinary account
+- Firebase project (for Google Sign-In + Admin SDK)
+- `ffmpeg` installed on your `PATH` (for local dev)
 
 ### Installation
 
@@ -110,97 +175,142 @@ git clone <repo-url>
 cd CaptionFlow
 
 # install server dependencies
-cd server
-npm install
+cd server && npm install
 
 # install client dependencies
-cd ../client
-npm install
+cd ../client && npm install
 ```
 
 ### Environment Variables
 
-**Server** — create `server/.env`:
+Copy the example files and fill in your values:
 
-```env
-PORT=4000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/captionflow
-JWT_SECRET=your_jwt_secret
-GROQ_API_KEY=your_groq_api_key
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
 
-**Client** — create `client/.env`:
-
-```env
-VITE_API_URL=http://localhost:4000
-```
+See [server/.env.example](./server/.env.example) and [client/.env.example](./client/.env.example) for all required variables with descriptions.
 
 ### Running Locally
 
 ```bash
-# start the backend (from /server)
-npm run dev      # nodemon, auto-restart
-npm start        # production
+# Terminal 1 — start the backend (from /server)
+node index.js
+# or with auto-restart via nodemon (if installed globally):
+nodemon index.js
 
-# start the frontend, in a separate terminal (from /client)
-npm run dev      # Vite dev server
-npm run build    # production build
+# Terminal 2 — start the frontend (from /client)
+npm run dev
 ```
+
+The API will be available at `http://localhost:5050` and the client at `http://localhost:5173` by default.
 
 ---
 
 ## 📡 API Reference
 
+### Auth — `/api/auth`
+
 | Method | Route | Description | Auth |
 |---|---|---|---|
-| `POST` | `/api/auth/signup` | Create a new user | — |
+| `POST` | `/api/auth/register` | Register a new user | — |
 | `POST` | `/api/auth/login` | Log in, receive a JWT | — |
+| `POST` | `/api/auth/google` | Sign in / register with Google (Firebase) | — |
 | `GET` | `/api/auth/me` | Get current user profile | ✅ |
-| `POST` | `/api/transcriptions` | Upload a file & start a transcription job | ✅ |
+| `GET` | `/api/auth/users` | List all users | ✅ |
+| `GET` | `/api/auth/users/:id` | Get a user by ID | ✅ |
+| `PATCH` | `/api/auth/users/:id` | Update user profile | ✅ |
+| `PATCH` | `/api/auth/users/:id/profile-picture` | Upload a new profile picture | ✅ |
+
+### Transcriptions — `/api/transcriptions`
+
+| Method | Route | Description | Auth |
+|---|---|---|---|
+| `POST` | `/api/transcriptions/upload` | Upload a file & start a transcription job | ✅ |
 | `GET` | `/api/transcriptions` | List the user's transcription jobs | ✅ |
-| `GET` | `/api/transcriptions/:id` | Get a single job's status/transcript | ✅ |
-| `DELETE` | `/api/transcriptions/:id` | Delete a transcription job | ✅ |
+| `GET` | `/api/transcriptions/:id` | Get a single job's status & transcript | ✅ |
+| `PATCH` | `/api/transcriptions/:id/status` | Update a job's status | ✅ |
+| `POST` | `/api/transcriptions/:id/download` | Track a download event | ✅ |
 
-> Route names are illustrative — check `server/routes/` for the exact paths as the API evolves.
+### AI Summaries — `/api/ai-summary`
 
-## 🧪 Testing
+| Method | Route | Description | Auth |
+|---|---|---|---|
+| `POST` | `/api/ai-summary/:jobId/generate-summary` | Generate AI summary & excerpts via Gemini | ✅ |
+| `GET` | `/api/ai-summary/:jobId/download/summary` | Download summary as PDF | ✅ |
+| `GET` | `/api/ai-summary/:jobId/download/excerpts` | Download excerpts as PDF | ✅ |
 
-- **Server**: add Jest + Supertest for route/controller coverage; run with `npm test` from `server/`
-- **Client**: add React Testing Library for component/page coverage
-- Prioritize testing the transcription status polling and export logic, since that's the most complex client behavior
+### Analytics — `/api/analytics`
 
-## ☁️ Deployment
+| Method | Route | Description | Auth |
+|---|---|---|---|
+| `POST` | `/api/analytics/visit` | Track an anonymous visitor session | — |
 
-- **Server**: deploy to Render, Railway, or a Docker container; needs `ffmpeg` available in the runtime image
-- **Client**: build with `npm run build` and host on Vercel or Netlify, or serve the static build from the Express server
-- Set all environment variables (`MONGODB_URI`, `JWT_SECRET`, `GROQ_API_KEY`, `VITE_API_URL`) on the hosting platform before deploying
+### Admin — `/api/admin` *(admin role required)*
+
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/admin/dashboard` | Overview metrics |
+| `GET` | `/api/admin/analytics` | Aggregated analytics |
+| `GET` | `/api/admin/users` | All users |
+| `GET` | `/api/admin/users/:id` | User detail |
+| `GET` | `/api/admin/transcriptions` | All transcription jobs |
+| `GET` | `/api/admin/logins` | Login history |
+| `GET` | `/api/admin/activity` | Activity log |
+| `GET` | `/api/admin/downloads` | Download history |
+| `GET` | `/api/admin/visitors` | Visitor sessions |
+| `GET` | `/api/admin/errors` | Error log |
+| `GET` | `/api/admin/audit-logs` | Admin audit trail |
+
+> All admin routes require both JWT authentication and an `admin` role. A rate limit of 100 requests per 15 minutes applies per IP.
+
+---
 
 ## 🔒 Authentication & Route Protection
 
-- Auth state is managed globally via `AuthContext`.
-- `ProtectedRoute` guards dashboard pages, redirecting unauthenticated users.
-- `GuestRoute` keeps logged-in users out of the login/signup pages.
-- Backend routes are protected with JWT-based middleware, ensuring transcription and user data stay private.
+- Auth state is managed globally via `AuthContext` (supports both JWT and Google Sign-In).
+- **"Remember Me"** stores the token in `localStorage` for 30-day persistence; unchecked sessions use `sessionStorage`.
+- `ProtectedRoute` guards all dashboard pages, redirecting unauthenticated users to `/login`.
+- `GuestRoute` prevents logged-in users from accessing `/login` and `/signup`.
+- `AdminRoute` checks the user's role; non-admin users are redirected.
+- Backend routes are protected with JWT middleware (`auth.middleware.js`) and an admin role guard (`admin.middleware.js`).
 
 ---
 
 ## 📤 Export Formats
 
-Transcripts can be downloaded as:
+| Format | Description |
+|---|---|
+| **TXT** | Plain text transcript |
+| **SRT** | SubRip subtitles — ready for most video players |
+| **ASS** | Advanced SubStation Alpha — styled captions |
+| **PDF** | AI-generated summary and key excerpts (via jsPDF) |
 
-- **TXT** — plain text
-- **SRT** — SubRip subtitles, ready for video players
-- **ASS** — Advanced SubStation Alpha, for styled captions
+---
+
+## ☁️ Deployment
+
+| Service | Platform |
+|---|---|
+| **Client** | [Vercel](https://vercel.com) — `npm run build`, rewrites configured in `vercel.json` |
+| **Server** | [Render](https://render.com) — Node.js service, ffmpeg available via `ffmpeg-static` |
+| **Database** | MongoDB Atlas |
+| **Media** | Cloudinary |
+
+Set all environment variables on your hosting platform before deploying. Refer to the `.env.example` files for the full list.
 
 ---
 
 ## 🛣️ Roadmap
 
-- [ ] Transcript Detail/Editor page — inline editing of segments, speakers, and timestamps
+- [ ] Email verification & password reset
+- [ ] Transcript editor — inline segment editing with speaker labels
 - [ ] Speaker diarization
-- [ ] Team/workspace support
-- [ ] Usage-based billing
+- [ ] Multiple language transcription & translation
+- [ ] Team / workspace support
+- [ ] Stripe subscriptions & usage-based billing
+- [ ] Public API & webhooks
 
 ---
 
@@ -209,15 +319,19 @@ Transcripts can be downloaded as:
 This project is in active development. General flow:
 
 1. Fork the repo and create a feature branch
-2. Make your changes, keeping them scoped
-3. Run linters/tests before submitting
+2. Make your changes, keeping them scoped to one concern
+3. Run linters before submitting (`npm run lint` from `client/`)
 4. Open a PR with a clear description of what changed and why
 
 Issues and pull requests are welcome once the repository is public.
 
+---
+
 ## 📄 License
 
-MIT (adjust as needed).
+MIT
+
+---
 
 ## 📬 Contact
 
