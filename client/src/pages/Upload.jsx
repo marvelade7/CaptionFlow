@@ -344,7 +344,7 @@ export default function Upload() {
                 <AIModal job={job} onClose={() => setShowAIModal(false)} />
             )}
 
-            <div className="flex flex-col gap-6" data-aos="fade-up">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-6" data-aos="fade-up">
 
             {/* ── Drop zone ─────────────────────────────────────────────────── */}
             {!jobId && (
@@ -353,7 +353,7 @@ export default function Upload() {
                     onDragLeave={() => setDragging(false)}
                     onDrop={onDrop}
                     onClick={() => !file && inputRef.current?.click()}
-                    className={`relative flex min-h-[300px] flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white transition-all
+                    className={`relative flex min-h-[220px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white transition-all sm:min-h-[300px]
                         ${dragging ? "border-[#7c3aed] bg-[#f5f3ff]" : "border-[#ecebf3] hover:border-[#c4b5fd] hover:bg-[#f9f8fc]"}
                         ${file ? "cursor-default" : "cursor-pointer"}`}
                 >
@@ -443,18 +443,18 @@ export default function Upload() {
 
             {/* ── Job status card ───────────────────────────────────────────── */}
             {job && (
-                <div className="rounded-2xl border border-[#ecebf3] bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
+                <div className="w-full overflow-hidden rounded-2xl border border-[#ecebf3] bg-white shadow-[0_1px_2px_rgba(15,11,31,0.04),0_8px_24px_rgba(15,11,31,0.04)]">
                     {/* Header */}
-                    <div className="flex items-center justify-between border-b border-[#ecebf3] px-6 py-4">
-                        <div className="flex items-center gap-3">
-                            <p className="text-sm font-semibold text-[#0f0b1f] truncate max-w-[260px]">
+                    <div className="flex flex-col gap-3 border-b border-[#ecebf3] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                            <p className="max-w-[160px] truncate text-sm font-semibold text-[#0f0b1f] sm:max-w-[260px]">
                                 {job.originalFileName}
                             </p>
                             <StatusBadge status={job.status} />
                         </div>
                         <button
                             onClick={reset}
-                            className="text-xs font-semibold text-[#7c3aed] hover:underline"
+                            className="text-left text-xs font-semibold text-[#7c3aed] hover:underline sm:text-right"
                         >
                             Upload another
                         </button>
@@ -462,7 +462,7 @@ export default function Upload() {
 
                     {/* Processing state */}
                     {(job.status === "uploaded" || job.status === "queued" || job.status === "processing") && (
-                        <div className="flex flex-col items-center gap-4 px-8 py-10">
+                        <div className="flex flex-col items-center gap-4 px-4 py-8 sm:px-8 sm:py-10">
                             {/* Icon + label */}
                             <div className="flex items-center gap-2">
                                 <Loader2 size={16} className="animate-spin text-[#7c3aed]" />
@@ -498,9 +498,9 @@ export default function Upload() {
 
                     {/* Success */}
                     {job.status === "completed" && (
-                        <div className="px-6 py-5">
-                            <div className="mb-6 flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
+                        <div className="px-4 py-4 sm:px-6 sm:py-5">
+                            <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-green-600">
                                     <CheckCircle2 size={16} />
                                     Transcription complete
                                     <span className="text-xs font-normal text-[#6b6680]">
@@ -509,14 +509,14 @@ export default function Upload() {
                                 </div>
                                 <button
                                     onClick={copyTranscript}
-                                    className="flex items-center gap-1.5 rounded-lg border border-[#ecebf3] px-3 py-1.5 text-xs font-semibold text-[#3f3a52] transition hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[#ecebf3] px-3 py-1.5 text-xs font-semibold text-[#3f3a52] transition hover:bg-[#f5f3ff] hover:text-[#7c3aed]"
                                 >
                                     {copied ? <Check size={13} /> : <Copy size={13} />}
                                     {copied ? "Copied!" : "Copy Raw Text"}
                                 </button>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <button
                                     onClick={() => handleDownload("txt")}
                                     className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-[#ecebf3] bg-white py-6 transition-all hover:border-[#7c3aed] hover:bg-[#f5f3ff]"
@@ -561,8 +561,8 @@ export default function Upload() {
 
                     {/* ── AI Summary button row */}
                     {job.status === "completed" && (
-                        <div className="border-t border-[#ecebf3] bg-[#fcfbfe] rounded-b-2xl px-6 py-4 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-3 rounded-b-2xl border-t border-[#ecebf3] bg-[#fcfbfe] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Sparkles size={16} className="text-[#7c3aed]" />
                                 <p className="text-sm font-semibold text-[#0f0b1f]">AI Summary & Excerpts</p>
                                 {job.summary?.text && (
@@ -573,7 +573,7 @@ export default function Upload() {
                             </div>
                             <button
                                 onClick={() => setShowAIModal(true)}
-                                className="flex items-center gap-1.5 rounded-lg border border-[#e0dbf7] bg-[#f5f3ff] px-3 py-2 text-xs font-semibold text-[#7c3aed] transition hover:bg-[#ede9fe] hover:border-[#c4b5fd]"
+                                className="flex items-center justify-center gap-1.5 rounded-lg border border-[#e0dbf7] bg-[#f5f3ff] px-3 py-2 text-xs font-semibold text-[#7c3aed] transition hover:bg-[#ede9fe] hover:border-[#c4b5fd]"
                             >
                                 <Sparkles size={13} />
                                 {job.summary?.text ? "View Summary" : "Generate Summary"}
